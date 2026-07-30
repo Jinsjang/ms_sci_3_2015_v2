@@ -594,6 +594,9 @@
                         <button onclick="saveTempApiKey()" class="bg-amber-600 hover:bg-amber-500 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
                             키/cURL 적용
                         </button>
+                        <button onclick="clearSavedApiKey()" class="bg-space-700 hover:bg-space-600 text-gray-300 border border-gray-600 font-medium px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap" title="저장된 API 키 초기화">
+                            초기화
+                        </button>
                     </div>
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs pt-2 border-t border-amber-800/40">
                         <span class="text-gray-300 flex items-center"><i class="fa-solid fa-microchip text-amber-400 mr-1.5"></i>Gemini 모델 선택 (무료 쿼터 호환):</span>
@@ -844,6 +847,7 @@
         const GEMINI_MODEL   = "gemini-1.5-flash"; // 기본 사용할 모델명 (무료 티어 쿼터 호환성 1위)
         const FALLBACK_MODELS = [
             "gemini-1.5-flash",
+            "gemini-1.5-flash-latest",
             "gemini-2.0-flash-lite",
             "gemini-1.5-pro",
             "gemini-2.0-flash"
@@ -1123,13 +1127,15 @@
             }
             
             if (key) {
-                statusText.innerText = "설정됨 (" + key.substring(0, 6) + "...)";
+                const isOverridden = !!localStorage.getItem('gemini_api_key_override');
+                const keySource = isOverridden ? "브라우저 저장" : "코드 설정";
+                statusText.innerText = `설정됨 [${keySource}: ${key.substring(0, 6)}...]`;
                 statusText.className = "text-emerald-400 font-semibold";
-                if (localStorage.getItem('gemini_api_key_override') && tempInput) {
+                if (isOverridden && tempInput) {
                     tempInput.value = localStorage.getItem('gemini_api_key_override');
                 }
             } else {
-                statusText.innerText = "비어있음";
+                statusText.innerText = "비어있음 (새 API 키 필요)";
                 statusText.className = "text-red-400 font-semibold";
                 if (tempInput) tempInput.value = "";
             }
@@ -1148,8 +1154,16 @@
                 }
             } else {
                 localStorage.removeItem('gemini_api_key_override');
-                alert("저장된 API 키가 삭제되었거나 입력 형식이 올바르지 않습니다.");
+                alert("입력 형식이 올바르지 않아 저장된 API 키가 삭제/초기화되었습니다.");
             }
+            checkApiKeyStatus();
+        }
+
+        function clearSavedApiKey() {
+            localStorage.removeItem('gemini_api_key_override');
+            const tempInput = document.getElementById('tempApiKeyInput');
+            if (tempInput) tempInput.value = "";
+            alert("저장된 API 키가 삭제되었습니다.");
             checkApiKeyStatus();
         }
 
