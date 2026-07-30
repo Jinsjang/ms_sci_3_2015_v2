@@ -405,18 +405,25 @@
             let firebaseResults = [];
             try {
                 const dbRef = ref(db);
-                const snapshot = await withTimeout(get(child(dbRef, "submissions")), 4000, "Firebase 조회 초과");
+                const snapshot = await withTimeout(get(child(dbRef, "submissions")), 5000, "Firebase 조회 초과");
                 if (snapshot.exists()) {
                     const dataObj = snapshot.val();
                     Object.keys(dataObj).forEach((key) => {
                         const data = dataObj[key];
+                        // submittedAt: Firebase에 ISO 문자열 또는 타임스탬프 숫자 모두 안전하게 파싱
+                        let submittedAt = new Date();
+                        if (data.submittedAt) {
+                            const parsed = new Date(data.submittedAt);
+                            submittedAt = isNaN(parsed.getTime()) ? new Date() : parsed;
+                        }
                         firebaseResults.push({
                             id: key,
                             groupNumber: data.groupNumber || "모둠 미지정",
                             topicTitle: data.topicTitle || "주제 없음",
                             chatSummary: data.chatSummary || "요약 없음",
                             feedback: data.feedback || "",
-                            submittedAt: data.submittedAt ? new Date(data.submittedAt) : new Date()
+                            submittedAt: submittedAt,
+                            isLocal: false
                         });
                     });
                 }
@@ -427,25 +434,41 @@
             let localResults = [];
             try {
                 const localData = JSON.parse(localStorage.getItem('local_submissions') || '[]');
-                localResults = localData.map(item => ({
-                    id: item.id,
-                    groupNumber: item.groupNumber || "모둠 미지정",
-                    topicTitle: item.topicTitle || "주제 없음",
-                    chatSummary: item.chatSummary || "요약 없음",
-                    feedback: item.feedback || "",
-                    submittedAt: item.submittedAt ? new Date(item.submittedAt) : new Date(),
-                    isLocal: true
-                }));
+                localResults = localData.map(item => {
+                    let submittedAt = new Date();
+                    if (item.submittedAt) {
+                        const parsed = new Date(item.submittedAt);
+                        submittedAt = isNaN(parsed.getTime()) ? new Date() : parsed;
+                    }
+                    return {
+                        id: item.id,
+                        groupNumber: item.groupNumber || "모둠 미지정",
+                        topicTitle: item.topicTitle || "주제 없음",
+                        chatSummary: item.chatSummary || "요약 없음",
+                        feedback: item.feedback || "",
+                        submittedAt: submittedAt,
+                        isLocal: true
+                    };
+                });
             } catch (e) {
                 console.error("Failed to read local storage:", e);
             }
 
+            // ★ 수정: groupNumber 기준 중복 제거 시 Firebase 우선하되,
+            //         Firebase 항목에 피드백이 없고 local에 피드백이 있으면 local 피드백을 병합
             const map = new Map();
             localResults.forEach(item => map.set(item.groupNumber, item));
-            firebaseResults.forEach(item => map.set(item.groupNumber, item));
+            firebaseResults.forEach(fbItem => {
+                const existing = map.get(fbItem.groupNumber);
+                if (existing && !fbItem.feedback && existing.feedback) {
+                    // Firebase에 피드백이 아직 없을 때 로컬에 저장된 피드백 유지
+                    fbItem.feedback = existing.feedback;
+                }
+                map.set(fbItem.groupNumber, fbItem);
+            });
 
             const results = Array.from(map.values());
-            results.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+            results.sort((a, b) => b.submittedAt - a.submittedAt);
             return results;
         };
 
@@ -477,6 +500,7 @@
         };
 
         window.saveFeedbackToRealtimeDB = async function(submissionId, feedbackText, groupNumber = null) {
+            // 1. LocalStorage 항상 업데이트 (오프라인 백업)
             try {
                 const localData = JSON.parse(localStorage.getItem('local_submissions') || '[]');
                 const idx = localData.findIndex(item => item.id === submissionId || (groupNumber && item.groupNumber === groupNumber));
@@ -495,13 +519,32 @@
                 console.error("Local feedback save error:", e);
             }
 
+            // 2. Firebase 저장: local_ ID는 직접 경로가 없으므로 groupNumber로 Firebase 노드 탐색 후 저장
             if (submissionId.startsWith('local_')) {
-                return true;
+                if (!groupNumber) return true;
+                try {
+                    // groupNumber로 Firebase에서 실제 노드 키를 찾아 피드백 저장 시도
+                    const dbRef = ref(db);
+                    const snapshot = await withTimeout(get(child(dbRef, "submissions")), 4000, "Firebase 조회 초과");
+                    if (snapshot.exists()) {
+                        const dataObj = snapshot.val();
+                        const matchKey = Object.keys(dataObj).find(k => dataObj[k].groupNumber === groupNumber);
+                        if (matchKey) {
+                            const itemRef = ref(db, "submissions/" + matchKey + "/feedback");
+                            await withTimeout(set(itemRef, feedbackText), 4000, "Firebase feedback save timeout");
+                            return true;
+                        }
+                    }
+                } catch (error) {
+                    console.warn("Firebase feedback save (local_ id) warning:", error);
+                }
+                return true; // local에는 저장됨
             }
 
+            // 3. Firebase 직접 경로 저장 (일반 Firebase ID)
             try {
                 const itemRef = ref(db, "submissions/" + submissionId + "/feedback");
-                await withTimeout(set(itemRef, feedbackText), 4000, "Firebase feedback save timeout");
+                await withTimeout(set(itemRef, feedbackText), 5000, "Firebase feedback save timeout");
                 return true;
             } catch (error) {
                 console.warn("Firebase feedback save warning:", error);
@@ -874,24 +917,45 @@
                         })
                     });
 
+                    // ★ 수정: response body는 한 번만 읽을 수 있으므로 먼저 text로 읽은 뒤 파싱
+                    const rawText = await response.text();
+                    let data = {};
+                    try { data = JSON.parse(rawText); } catch (e) { /* JSON 파싱 실패 시 빈 객체 */ }
+
                     if (response.ok) {
-                        const data = await response.json();
-                        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                        if (text) {
-                            return { text: text, modelUsed: modelName };
+                        const candidate = data.candidates?.[0];
+                        const text = candidate?.content?.parts?.[0]?.text;
+
+                        if (text && text.trim()) {
+                            return { text: text.trim(), modelUsed: modelName };
                         }
+
+                        // ★ 수정: SAFETY 등의 이유로 text가 없는 경우 명확한 오류로 처리
+                        const finishReason = candidate?.finishReason;
+                        if (finishReason && finishReason !== 'STOP') {
+                            console.warn(`[Gemini API] ${modelName} 응답 차단됨 (finishReason: ${finishReason}). 다음 모델 시도...`);
+                            lastError = new Error(`${modelName} 응답 차단: ${finishReason}`);
+                            continue;
+                        }
+
+                        // 응답은 왔으나 텍스트가 비어있는 경우
+                        lastError = new Error(`${modelName}: 응답 텍스트가 비어 있습니다.`);
+                        continue;
                     }
 
-                    const errData = await response.json().catch(() => ({}));
-                    const errMsg = errData.error?.message || `API 요청 오류 (${response.status})`;
+                    // HTTP 오류 처리
+                    const errMsg = data.error?.message || `API 요청 오류 (HTTP ${response.status})`;
 
                     if (response.status === 400 || response.status === 403) {
                         if (errMsg.includes("API key not valid")) {
                             throw new Error("INVALID_API_KEY");
                         }
                     }
-
-                    console.warn(`[Gemini API] ${modelName} 호출 실패 (${errMsg}). 다음 대체 모델로 자동 전환 중...`);
+                    if (response.status === 429 || errMsg.toLowerCase().includes("quota")) {
+                        console.warn(`[Gemini API] ${modelName} 쿼터 초과. 다음 대체 모델로 자동 전환 중...`);
+                    } else {
+                        console.warn(`[Gemini API] ${modelName} 호출 실패 (${errMsg}). 다음 대체 모델로 자동 전환 중...`);
+                    }
                     lastError = new Error(errMsg);
 
                 } catch (err) {
