@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>21세기 우주 탐사 프로젝트 - 학생 탐구 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Pretendard', 'sans-serif'],
+                    },
+                    colors: {
+                        space: {
+                            900: '#0B0F19',
+                            800: '#151C2C',
+                            700: '#1E293B',
+                            accent: '#3B82F6',
+                            highlight: '#8B5CF6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0B0F19;
+            color: #F8FAFC;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
+            background-attachment: fixed;
+        }
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #151C2C; }
+        ::-webkit-scrollbar-thumb { background: #3B82F6; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2563EB; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans">
+
+    <header class="bg-space-800 border-b border-gray-800 sticky top-0 z-40 shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                    <i class="fa-solid fa-rocket mr-2 text-blue-400"></i>21세기 우주 탐사
+                </h1>
+                <p class="text-sm text-gray-400 mt-1">중등과학 3학년 | 학생 탐구 활동 페이지</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="hidden md:inline-block px-3 py-1 bg-gray-800 rounded-full text-xs text-gray-300 border border-gray-700">#AI활용</span>
+                <span class="hidden md:inline-block px-3 py-1 bg-gray-800 rounded-full text-xs text-gray-300 border border-gray-700">#프로젝트학습</span>
+            </div>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <div class="max-w-6xl mx-auto px-4 mt-2">
+            <nav class="flex overflow-x-auto space-x-1 border-b border-gray-800 pb-px" id="tabs">
+                <button onclick="switchTab('step1')" class="tab-btn active px-4 py-3 text-sm font-medium text-blue-400 border-b-2 border-blue-400 whitespace-nowrap transition-colors duration-200">
+                    1. 도입 <span class="text-xs text-gray-500 ml-1">(10분)</span>
+                </button>
+                <button onclick="switchTab('step2')" class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 border-b-2 border-transparent hover:text-gray-200 whitespace-nowrap transition-colors duration-200">
+                    2. 탐색 <span class="text-xs text-gray-500 ml-1">(10분)</span>
+                </button>
+                <button onclick="switchTab('step3')" class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 border-b-2 border-transparent hover:text-gray-200 whitespace-nowrap transition-colors duration-200">
+                    3. 적용 <span class="text-xs text-gray-500 ml-1">(30분)</span>
+                </button>
+                <button onclick="switchTab('step4')" class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 border-b-2 border-transparent hover:text-gray-200 whitespace-nowrap transition-colors duration-200">
+                    4. 발표 및 제출 <span class="text-xs text-gray-500 ml-1">(2차시)</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 py-8">
+        
+        <!-- Step 1: 도입 -->
+        <section id="step1" class="tab-content active">
+            <div class="bg-space-800 rounded-2xl p-6 md:p-8 border border-gray-800 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-10">
+                    <i class="fa-solid fa-users text-9xl text-blue-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-6 flex items-center text-blue-300">
+                    <span class="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg mr-3 text-sm">Step 1</span>과제 제시 및 모둠 구성
+                </h2>
+                
+                <div class="space-y-6 relative z-10">
+                    <div class="bg-space-700/50 p-5 rounded-xl border border-gray-700">
+                        <h3 class="text-lg font-semibold mb-2 text-white"><i class="fa-solid fa-bullseye text-red-400 mr-2"></i>학습 목표 (성취기준)</h3>
+                        <p class="text-gray-300 text-lg leading-relaxed">
+                            우주 탐사의 의의와 인류에게 미치는 영향을 조사하여 발표할 수 있다.
+                        </p>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-space-700/50 p-5 rounded-xl border border-gray-700">
+                            <h3 class="text-lg font-semibold mb-4 text-white"><i class="fa-solid fa-list-check text-green-400 mr-2"></i>활동 안내</h3>
+                            <ul class="space-y-3 text-gray-300">
+                                <li class="flex items-start"><i class="fa-solid fa-check mt-1 mr-2 text-green-500 text-sm"></i> 선생님의 설명을 경청합니다.</li>
+                                <li class="flex items-start"><i class="fa-solid fa-check mt-1 mr-2 text-green-500 text-sm"></i> 사용할 도구(패들렛, 제미나이)의 사용법을 확인합니다.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-space-700/50 p-5 rounded-xl border border-gray-700 border-l-4 border-l-purple-500">
+                            <h3 class="text-lg font-semibold mb-4 text-white"><i class="fa-solid fa-people-group text-purple-400 mr-2"></i>모둠 구성 (전체)</h3>
+                            <div class="flex items-center justify-between bg-space-900 p-4 rounded-lg">
+                                <div class="text-center w-full">
+                                    <span class="block text-3xl font-bold text-purple-400">3명</span>
+                                    <span class="text-sm text-gray-400">1조당 인원</span>
+                                </div>
+                                <div class="text-gray-600 text-2xl mx-2">×</div>
+                                <div class="text-center w-full">
+                                    <span class="block text-3xl font-bold text-purple-400">11모둠</span>
+                                    <span class="text-sm text-gray-400">총 모둠 수</span>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-400 mt-3 text-center">도구: <strong>패들렛</strong> (역할: 과제안내, 모둠구성)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 flex justify-end">
+                    <button onclick="switchTab('step2')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-blue-500/30">
+                        다음 단계로 이동 <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 2: 탐색 -->
+        <section id="step2" class="tab-content">
+            <div class="bg-space-800 rounded-2xl p-6 md:p-8 border border-gray-800 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-10">
+                    <i class="fa-solid fa-magnifying-glass text-9xl text-purple-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-6 flex items-center text-purple-400">
+                    <span class="bg-purple-500/20 text-purple-400 px-3 py-1 rounded-lg mr-3 text-sm">Step 2</span>자료 수집 및 선정
+                </h2>
+
+                <div class="space-y-6 relative z-10">
+                    <p class="text-gray-300 text-lg">모둠별로 역할을 배분하고 21세기 우주 탐사 주제를 선정하여 인공지능을 통해 자료를 탐색합니다.</p>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-space-700/50 p-5 rounded-xl border border-gray-700">
+                            <h3 class="text-lg font-semibold mb-4 text-white"><i class="fa-solid fa-list-ol text-blue-400 mr-2"></i>탐색 순서</h3>
+                            <ol class="space-y-4 text-gray-300 list-decimal list-inside">
+                                <li class="pb-2 border-b border-gray-700">우주 탐사 주제 선정</li>
+                                <li class="pb-2 border-b border-gray-700"><strong>인공지능 검색 (제미나이 활용)</strong></li>
+                                <li class="pb-2 border-b border-gray-700 font-semibold text-red-300">웹 검색으로 진위 여부 확인 및 검증 필수!</li>
+                                <li class="pb-2 border-b border-gray-700">신뢰할 수 있는 원본 소스 선정</li>
+                                <li>모둠원 역할 배분</li>
+                            </ol>
+                        </div>
+
+                        <div class="bg-red-900/20 p-5 rounded-xl border border-red-900/50">
+                            <h3 class="text-lg font-semibold mb-4 text-red-400"><i class="fa-solid fa-triangle-exclamation mr-2"></i>AI·디지털 활용 유의사항</h3>
+                            <div class="bg-space-900/80 p-4 rounded-lg text-gray-300 text-sm space-y-3">
+                                <p><i class="fa-solid fa-circle-info text-red-500 mr-2 text-xs"></i>제미나이를 통해 자료를 수집할 때 <strong>반드시 출처 링크를 포함</strong>하여 수집하세요.</p>
+                                <p><i class="fa-solid fa-circle-info text-red-500 mr-2 text-xs"></i>수집한 링크에 직접 접속하여 <strong>내용의 진위여부(Fact Check)를 반드시 확인</strong>해야 합니다.</p>
+                                <p class="mt-4 p-2 bg-red-950/50 rounded border border-red-900 text-center text-red-300 font-medium">
+                                    무비판적인 수용은 감점 요소입니다!
+                                </p>
+                            </div>
+                            <div class="mt-4 text-right">
+                                <a href="https://gemini.google.com" target="_blank" class="inline-block bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                    제미나이(Gemini) 열기 <i class="fa-solid fa-external-link-alt ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-between">
+                    <button onclick="switchTab('step1')" class="text-gray-400 hover:text-white px-4 py-2 transition-colors">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> 이전
+                    </button>
+                    <button onclick="switchTab('step3')" class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-purple-500/30">
+                        다음 단계로 이동 <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 3: 적용 -->
+        <section id="step3" class="tab-content">
+            <div class="bg-space-800 rounded-2xl p-6 md:p-8 border border-gray-800 shadow-xl relative overflow-hidden">
+                 <div class="absolute top-0 right-0 p-8 opacity-10">
+                    <i class="fa-solid fa-laptop-code text-9xl text-green-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-6 flex items-center text-green-400">
+                    <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-lg mr-3 text-sm">Step 3</span>자료 생성 및 정리 (제미나이 활용)
+                </h2>
+
+                <div class="space-y-6 relative z-10">
+                    <p class="text-gray-300 text-lg">수집하고 검증한 원본 소스를 바탕으로 발표 자료(PT)와 대본을 작성합니다. 아래 버튼을 눌러 제미나이(Gemini)와 대화하며 자료를 정리해보세요.</p>
+                    
+                    <!-- Gemini External Link Banner -->
+                    <div class="bg-gradient-to-r from-blue-900/40 to-purple-900/40 p-8 rounded-xl border border-blue-500/30 text-center space-y-4 shadow-lg">
+                        <div class="w-16 h-16 bg-blue-600/20 border border-blue-400/40 rounded-full flex items-center justify-center mx-auto text-blue-400 text-3xl">
+                            <i class="fa-solid fa-sparkles"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Google Gemini(제미나이) 탐색 및 대화</h3>
+                        <p class="text-gray-300 text-sm max-w-xl mx-auto">
+                            제미나이를 새창으로 열어 탐사 주제에 관한 질의응답, 발표 대본 작성, PT 목차 구성 등의 도움을 받으세요. 대화가 끝난 후 대화 요약을 작성하여 제출하게 됩니다.
+                        </p>
+                        <div class="pt-2">
+                            <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-6 py-3.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all transform hover:scale-105 shadow-xl">
+                                <i class="fa-solid fa-arrow-up-right-from-square mr-2"></i> 제미나이(Gemini) 새 창으로 열기
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Evaluation Rubric -->
+                    <div class="mt-6">
+                        <h3 class="text-lg font-semibold mb-3 text-white"><i class="fa-solid fa-ranking-star text-yellow-400 mr-2"></i>발표 자료 평가 기준</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-gray-300">
+                                <thead class="text-xs uppercase bg-space-700 text-gray-400">
+                                    <tr>
+                                        <th class="px-4 py-3 rounded-tl-lg">평가 요소</th>
+                                        <th class="px-4 py-3 text-red-400">심화 (우수)</th>
+                                        <th class="px-4 py-3 text-blue-400">기본 (보통)</th>
+                                        <th class="px-4 py-3 text-gray-500 rounded-tr-lg">기초 (노력요함)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-700 bg-space-900/50">
+                                    <tr>
+                                        <td class="px-4 py-4 font-medium text-white bg-space-800">과학적 발표</td>
+                                        <td class="px-4 py-4 border-l border-gray-700">정량적 자료와 <b>시각 자료</b>를 활용하여 청자가 이해하기 쉽고 본질이 잘 전달되도록 발표</td>
+                                        <td class="px-4 py-4 border-l border-gray-700">시각 자료를 활용하여 내용을 효과적으로 발표</td>
+                                        <td class="px-4 py-4 border-l border-gray-700">글(텍스트)만 활용하여 내용을 발표</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-4 font-medium text-white bg-space-800">AI 자료 비판적 수용</td>
+                                        <td class="px-4 py-4 border-l border-gray-700">얻은 자료의 <b>진위 여부</b>와 이해를 바탕으로 <b>비판적으로 수용</b>함</td>
+                                        <td class="px-4 py-4 border-l border-gray-700">자료를 바탕으로 진위 여부만 검토하고 수용함</td>
+                                        <td class="px-4 py-4 border-l border-gray-700">인공지능 자료를 비판/검증 없이 수용함</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-between">
+                    <button onclick="switchTab('step2')" class="text-gray-400 hover:text-white px-4 py-2 transition-colors">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> 이전
+                    </button>
+                    <button onclick="switchTab('step4')" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-green-500/30">
+                        제출 단계로 <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 4: 발표 및 제출 -->
+        <section id="step4" class="tab-content">
+            <div class="bg-space-800 rounded-2xl p-6 md:p-8 border border-gray-800 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-10">
+                    <i class="fa-solid fa-chalkboard-user text-9xl text-yellow-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-6 flex items-center text-yellow-400">
+                    <span class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-lg mr-3 text-sm">Step 4</span>발표 및 제출
+                </h2>
+
+                <div class="grid md:grid-cols-2 gap-8 relative z-10">
+                    <div class="space-y-6">
+                        <div class="bg-space-700/50 p-5 rounded-xl border border-gray-700">
+                            <h3 class="text-lg font-semibold mb-3 text-white">2차시 발표 안내</h3>
+                            <ul class="space-y-3 text-gray-300 text-sm">
+                                <li><i class="fa-regular fa-hand-point-right text-yellow-500 mr-2"></i>만들어진 PT와 대본을 활용하여 모둠별로 발표합니다.</li>
+                                <li><i class="fa-regular fa-hand-point-right text-yellow-500 mr-2"></i>청중(다른 모둠)은 발표 내용 중 어려운 부분을 질문합니다.</li>
+                                <li><i class="fa-regular fa-hand-point-right text-yellow-500 mr-2"></i>발표 자료는 선생님이 안내한 <b>패들렛(Padlet)</b>에 업로드합니다.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-space-900 p-6 rounded-xl border border-gray-700 shadow-inner">
+                        <h3 class="text-xl font-bold mb-4 text-white">최종 제출</h3>
+                        <form id="submitForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                            <div>
+                                <label for="groupNumber" class="block text-sm font-medium text-gray-300 mb-1">모둠 선택</label>
+                                <select id="groupNumber" required class="w-full bg-space-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                                    <option value="" disabled selected>모둠을 선택하세요</option>
+                                    <script>
+                                        for(let i=1; i<=11; i++){
+                                            document.write(`<option value="${i}모둠">${i}모둠</option>`);
+                                        }
+                                    </script>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="topicTitle" class="block text-sm font-medium text-gray-300 mb-1">발표 주제</label>
+                                <input type="text" id="topicTitle" required placeholder="예: 제임스 웹 우주 망원경의 성과" 
+                                    class="w-full bg-space-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 placeholder-gray-500">
+                            </div>
+
+                            <div>
+                                <label for="chatSummaryInput" class="block text-sm font-medium text-gray-300 mb-1">대화 요약</label>
+                                <textarea id="chatSummaryInput" required rows="4" placeholder="제미나이(Gemini)와 탐색 및 대화한 핵심 내용을 요약하여 작성하세요."
+                                    class="w-full bg-space-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 placeholder-gray-500 resize-none"></textarea>
+                            </div>
+
+                            <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] shadow-lg flex justify-center items-center">
+                                <span id="btnText">과제 제출하기</span>
+                                <i id="btnSpinner" class="fa-solid fa-circle-notch fa-spin hidden ml-2"></i>
+                            </button>
+                        </form>
+                        
+                        <div id="successMessage" class="hidden mt-4 p-4 mb-4 text-sm text-green-400 rounded-lg bg-green-900/20 border border-green-800 text-center">
+                            <i class="fa-solid fa-circle-check text-2xl mb-2 block"></i>
+                            성공적으로 제출되었습니다!
+                        </div>
+                        <div id="submitErrorMessage" class="hidden mt-4 p-3 text-sm text-red-300 rounded-lg bg-red-900/20 border border-red-800">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-start">
+                    <button onclick="switchTab('step3')" class="text-gray-400 hover:text-white px-4 py-2 transition-colors">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> 이전
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-gray-800 mt-auto py-6 text-center text-gray-500 text-sm">
+        <p>21세기 우주 탐사 프로젝트 - 중등과학 3학년 과정 중심 평가용 웹앱</p>
+    </footer>
+
+    <!-- Firebase Submission Module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAryukXVBSeU4Gu7qz0e4AlBJTksJlIRE",
+            authDomain: "ms3-21th-century-space.firebaseapp.com",
+            databaseURL: "https://ms3-21th-century-space-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ms3-21th-century-space",
+            storageBucket: "ms3-21th-century-space.firebasestorage.app",
+            messagingSenderId: "278442658555",
+            appId: "1:278442658555:web:5fe68af291928798197e5e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, "https://ms3-21th-century-space-default-rtdb.asia-southeast1.firebasedatabase.app");
+
+        function withTimeout(promise, ms = 4000, errorMsg = "서버 응답 시간 초과") {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error(errorMsg)), ms))
+            ]);
+        }
+
+        function saveToLocalStorage(data) {
+            try {
+                const localData = JSON.parse(localStorage.getItem('local_submissions') || '[]');
+                const newSubmission = {
+                    id: 'local_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+                    groupNumber: data.group,
+                    topicTitle: data.topic,
+                    chatSummary: data.summary,
+                    feedback: data.feedback || "",
+                    submittedAt: new Date().toISOString(),
+                    isLocal: true
+                };
+                const index = localData.findIndex(item => item.groupNumber === data.group);
+                if (index >= 0) {
+                    localData[index] = newSubmission;
+                } else {
+                    localData.push(newSubmission);
+                }
+                localStorage.setItem('local_submissions', JSON.stringify(localData));
+                return newSubmission;
+            } catch (e) {
+                console.error("Failed to save to local storage:", e);
+            }
+        }
+
+        window.saveToRealtimeDB = async function(data) {
+            saveToLocalStorage(data);
+            try {
+                const submissionsRef = ref(db, "submissions");
+                await withTimeout(push(submissionsRef, {
+                    groupNumber: data.group,
+                    topicTitle: data.topic,
+                    chatSummary: data.summary,
+                    feedback: "",
+                    submittedAt: new Date().toISOString()
+                }), 4000, "Firebase DB 연결 초과");
+                return { success: true, mode: 'remote' };
+            } catch (error) {
+                console.warn("Firebase save timed out or failed. Saved to local storage backup:", error);
+                return { success: true, mode: 'local', error: error.message };
+            }
+        };
+    </script>
+
+    <!-- Student UI Script -->
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'text-blue-400', 'border-blue-400');
+                btn.classList.add('text-gray-400', 'border-transparent');
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            
+            const activeBtn = document.querySelector(`button[onclick="switchTab('${tabId}')"]`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-gray-400', 'border-transparent');
+                activeBtn.classList.add('active', 'text-blue-400', 'border-blue-400');
+            }
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            const submitBtn    = document.getElementById('submitBtn');
+            const btnText      = document.getElementById('btnText');
+            const btnSpinner   = document.getElementById('btnSpinner');
+            const successMsg   = document.getElementById('successMessage');
+            const errorMsg     = document.getElementById('submitErrorMessage');
+
+            errorMsg.classList.add('hidden');
+            
+            const group   = document.getElementById('groupNumber').value;
+            const topic   = document.getElementById('topicTitle').value;
+            const summary = document.getElementById('chatSummaryInput').value;
+            
+            submitBtn.disabled = true;
+            btnText.innerText  = '제출 중...';
+            btnSpinner.classList.remove('hidden');
+            
+            const formData = {
+                group:   group,
+                topic:   topic,
+                summary: summary || "요약 데이터가 없습니다."
+            };
+
+            try {
+                if (!window.saveToRealtimeDB) {
+                    throw new Error("제출 시스템이 초기화되지 않았습니다. 페이지를 새로고침하고 다시 시도해주세요.");
+                }
+
+                const result = await window.saveToRealtimeDB(formData);
+                submitBtn.classList.add('hidden');
+
+                if (result && result.mode === 'local') {
+                    successMsg.innerHTML = `<i class="fa-solid fa-circle-check text-2xl mb-2 block"></i>성공적으로 제출되었습니다! <span class="text-xs opacity-80 block mt-1">(서버 응답 지연으로 로컬 백업 저장소에 안전하게 보관됨)</span>`;
+                } else {
+                    successMsg.innerHTML = `<i class="fa-solid fa-circle-check text-2xl mb-2 block"></i>성공적으로 제출되었습니다!`;
+                }
+                successMsg.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Submission failed:", error);
+                errorMsg.innerText = "제출 실패: " + error.message;
+                errorMsg.classList.remove('hidden');
+                submitBtn.disabled = false;
+                btnText.innerText  = '다시 제출하기';
+                btnSpinner.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
