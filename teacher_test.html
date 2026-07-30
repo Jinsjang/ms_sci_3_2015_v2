@@ -263,7 +263,7 @@
                 </div>
                 <h3 class="text-xl font-bold text-white">교사 전용 대시보드 인증</h3>
                 <p class="text-xs text-gray-400 mt-1">대시보드 관제 시스템에 접근하려면 교사 비밀번호를 입력하세요.</p>
-                <p class="text-xs text-emerald-400/80 mt-1">(초기 비밀번호: <span class="font-mono bg-space-900 px-1.5 py-0.5 rounded">1234</span>)</p>
+                <p class="text-xs text-emerald-400/80 mt-1">(초기 비밀번호: <span class="font-mono bg-space-900 px-1.5 py-0.5 rounded">1234</span>) <button type="button" onclick="resetTeacherPasswordToDefault()" class="underline text-gray-400 hover:text-amber-300 ml-1 text-[11px]">비밀번호 초기화</button></p>
             </div>
 
             <form onsubmit="handleTeacherAuthSubmit(event)" class="space-y-4">
@@ -838,19 +838,32 @@ ${result.text.substring(0, 150)}...`);
             document.getElementById('teacherAuthModal').classList.remove('hidden');
         }
 
+                function resetTeacherPasswordToDefault() {
+            localStorage.removeItem('teacherPassword');
+            alert("비밀번호가 초기 비밀번호 '1234'로 리셋되었습니다.");
+            const pwInput = document.getElementById('teacherPasswordInput');
+            if (pwInput) pwInput.value = '1234';
+        }
+
         function handleTeacherAuthSubmit(event) {
             event.preventDefault();
-            const inputPw = document.getElementById('teacherPasswordInput').value;
+            const inputPw = document.getElementById('teacherPasswordInput').value.trim();
             const savedPw = getSavedPassword();
             const errorMsg = document.getElementById('pwErrorMsg');
 
-            if (inputPw === savedPw) {
+            // 기본 초기 비밀번호 '1234' 또는 저장된 비밀번호 중 하나라도 일치하면 로그인 허용
+            if (inputPw === savedPw || inputPw === '1234') {
                 isTeacherAuthenticated = true;
                 document.getElementById('teacherAuthModal').classList.add('hidden');
                 document.getElementById('teacherPasswordInput').value = '';
                 errorMsg.classList.add('hidden');
+                window.addLog?.('info', 'AUTH', '교사 인증 성공 (대시보드 접속)');
                 fetchTeacherSubmissions();
             } else {
+                errorMsg.classList.remove('hidden');
+                window.addLog?.('warn', 'AUTH', '교사 인증 실패: 비밀번호 불일치');
+            }
+        } else {
                 errorMsg.classList.remove('hidden');
             }
         }
