@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>21세기 우주 탐사 프로젝트</title>
+    <title>21세기 우주 탐사 프로젝트 조사하기 활동</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -392,6 +392,43 @@
         <p>21세기 우주 탐사 프로젝트 - 중등과학 3학년 과정 중심 평가용 웹앱</p>
     </footer>
 
+    <!-- Firebase SDK (ES Module) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAryukXVBSeU4Gu7qz0e4AlBJTksJlIRE",
+            authDomain: "ms3-21th-century-space.firebaseapp.com",
+            projectId: "ms3-21th-century-space",
+            storageBucket: "ms3-21th-century-space.firebasestorage.app",
+            messagingSenderId: "278442658555",
+            appId: "1:278442658555:web:5fe68af291928798197e5e"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Expose function globally for the normal script tag to call
+        window.saveToFirestore = async function(data) {
+            try {
+                const docRef = await addDoc(collection(db, "submissions"), {
+                    groupNumber: data.group,
+                    topicTitle: data.topic,
+                    chatSummary: data.summary,
+                    submittedAt: serverTimestamp()
+                });
+                console.log("Document written with ID: ", docRef.id);
+                return true;
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                throw error;
+            }
+        };
+    </script>
+
     <script>
         // --- Gemini Chatbot Logic ---
         
@@ -633,7 +670,7 @@ ${rawChatTextForSummary}`;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function handleFormSubmit(event) {
+        async function handleFormSubmit(event) {
             event.preventDefault();
             
             const submitBtn = document.getElementById('submitBtn');
@@ -656,27 +693,22 @@ ${rawChatTextForSummary}`;
                 summary: summary || "요약 데이터가 없습니다."
             };
 
-            // 구글 앱스 스크립트(GAS) 환경인지 확인
-            if (typeof google !== 'undefined' && google.script && google.script.run) {
-                google.script.run
-                    .withSuccessHandler(() => {
-                        submitBtn.classList.add('hidden');
-                        successMessage.classList.remove('hidden');
-                    })
-                    .withFailureHandler((error) => {
-                        alert('제출 중 오류가 발생했습니다: ' + error.message);
-                        submitBtn.disabled = false;
-                        btnText.innerText = '대화 요약 포함하여 제출하기';
-                        btnSpinner.classList.add('hidden');
-                    })
-                    .submitProjectData(formData);
-            } else {
-                // 로컬(일반 브라우저) 테스트용: 1.5초 후 성공 처리
-                console.log('가상 제출 데이터:', formData);
-                setTimeout(() => {
+            try {
+                // Call the Firebase function exposed from the module script
+                if (window.saveToFirestore) {
+                    await window.saveToFirestore(formData);
                     submitBtn.classList.add('hidden');
                     successMessage.classList.remove('hidden');
-                }, 1500);
+                } else {
+                    throw new Error("Firebase is not initialized correctly.");
+                }
+            } catch (error) {
+                console.error("Submission failed:", error);
+                // Custom alert equivalent using DOM manipulation would be better, but console for now
+                console.log('제출 중 오류가 발생했습니다. 개발자 도구를 확인하세요.');
+                submitBtn.disabled = false;
+                btnText.innerText = '대화 요약 포함하여 제출하기';
+                btnSpinner.classList.add('hidden');
             }
         }
     </script>
