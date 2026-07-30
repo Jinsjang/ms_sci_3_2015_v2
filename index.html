@@ -556,7 +556,7 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+        const db = getDatabase(app, "https://ms3-21th-century-space-default-rtdb.asia-southeast1.firebasedatabase.app");
 
         // Timeout helper to prevent infinite pending state when network/database is unresponsive
         function withTimeout(promise, ms = 4000, errorMsg = "서버 응답 시간 초과") {
