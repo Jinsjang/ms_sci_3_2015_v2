@@ -366,6 +366,9 @@
                         <button onclick="batchGenerateAIFeedback()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white border border-purple-500/40 text-xs px-3.5 py-2 rounded-lg font-medium transition-all flex items-center shadow">
                             <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> 일괄 AI 피드백
                         </button>
+                        <button onclick="promptSetApiKey()" class="bg-space-700 hover:bg-space-600 text-amber-300 border border-amber-600/50 text-xs px-3.5 py-2 rounded-lg font-medium transition-colors flex items-center">
+                            <i class="fa-solid fa-key mr-1.5 text-amber-400"></i> API 키 설정
+                        </button>
                         <button onclick="exportToCSV()" class="bg-space-700 hover:bg-space-600 text-gray-200 border border-gray-600 text-xs px-3.5 py-2 rounded-lg font-medium transition-colors flex items-center">
                             <i class="fa-solid fa-file-csv text-emerald-400 mr-1.5"></i> CSV 다운로드
                         </button>
@@ -1094,13 +1097,13 @@
             if (key) {
                 statusText.innerText = "설정됨 (" + key.substring(0, 6) + "...)";
                 statusText.className = "text-emerald-400 font-semibold";
-                if (localStorage.getItem('gemini_api_key_override')) {
+                if (localStorage.getItem('gemini_api_key_override') && tempInput) {
                     tempInput.value = localStorage.getItem('gemini_api_key_override');
                 }
             } else {
                 statusText.innerText = "비어있음";
                 statusText.className = "text-red-400 font-semibold";
-                tempInput.value = "";
+                if (tempInput) tempInput.value = "";
             }
         }
 
@@ -1108,14 +1111,37 @@
             const rawVal = document.getElementById('tempApiKeyInput').value;
             const extractedKey = extractApiKeyFromCurlOrText(rawVal);
 
-            if (extractedKey) {
+            if (extractedKey && extractedKey.length >= 10) {
                 localStorage.setItem('gemini_api_key_override', extractedKey);
                 alert("Gemini API 키가 적용되었습니다! (" + extractedKey.substring(0, 6) + "...)");
+                const tempInput = document.getElementById('tempApiKeyInput');
+                if (tempInput) {
+                    tempInput.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+                }
             } else {
                 localStorage.removeItem('gemini_api_key_override');
-                alert("저장된 API 키가 삭제되었습니다.");
+                alert("저장된 API 키가 삭제되었거나 입력 형식이 올바르지 않습니다.");
             }
             checkApiKeyStatus();
+        }
+
+        function promptSetApiKey() {
+            const currentKey = getEffectiveApiKey();
+            const input = prompt(
+                "🔑 Gemini API 키 또는 Google AI Studio에서 복사한 cURL 명령어 전체를 입력하세요:\n\n(API 키 무료 발급: https://aistudio.google.com/app/apikey)", 
+                currentKey ? currentKey : ""
+            );
+            if (input !== null) {
+                const key = extractApiKeyFromCurlOrText(input);
+                if (key && key.length >= 10) {
+                    localStorage.setItem('gemini_api_key_override', key);
+                    alert("✅ Gemini API 키가 정상적으로 설정되었습니다! (" + key.substring(0, 6) + "...)");
+                } else {
+                    localStorage.removeItem('gemini_api_key_override');
+                    alert("API 키 설정이 초기화되었습니다.");
+                }
+                checkApiKeyStatus();
+            }
         }
 
         function openAIFeedbackModal(submissionId) {
@@ -1149,9 +1175,14 @@
 
         async function triggerAIFeedbackGeneration() {
             const apiKey = getEffectiveApiKey();
-            if (!apiKey) {
-                alert("Gemini API 키가 설정되지 않았습니다.\n\n코드 상단의 'const GEMINI_API_KEY = \"\";'에 키를 입력하거나, 안내창의 API 키 입력칸에 키를 입력 후 [키 적용]을 눌러주세요.");
-                document.getElementById('tempApiKeyInput').focus();
+            const tempInput = document.getElementById('tempApiKeyInput');
+
+            if (!apiKey || apiKey.length < 10) {
+                alert("❌ Gemini API 키가 설정되지 않았거나 유효하지 않습니다.\n\n[해결 방법]\n1. https://aistudio.google.com/app/apikey 에 접속하여 무료 API 키를 발급받으세요.\n2. 안내창의 API 키 입력칸에 발급받은 키(AIzaSy...) 또는 cURL 명령어를 붙여넣고 [키/cURL 적용] 버튼을 눌러주세요.");
+                if (tempInput) {
+                    tempInput.classList.add('border-red-500', 'ring-2', 'ring-red-500');
+                    tempInput.focus();
+                }
                 return;
             }
 
@@ -1195,7 +1226,12 @@
 
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.error?.message || `API 요청 오류 (${response.status})`);
+                    const errMsg = errData.error?.message || `API 요청 오류 (${response.status})`;
+                    
+                    if (response.status === 400 || response.status === 403 || errMsg.includes('API key not valid')) {
+                        throw new Error("INVALID_API_KEY");
+                    }
+                    throw new Error(errMsg);
                 }
 
                 const data = await response.json();
@@ -1210,7 +1246,15 @@
 
             } catch (err) {
                 console.error("AI Feedback Generation Error:", err);
-                alert("AI 피드백 생성 실패: " + err.message);
+                if (err.message === "INVALID_API_KEY" || err.message.includes("API key not valid")) {
+                    alert("❌ [API key not valid] Gemini API 키가 유효하지 않습니다.\n\n[해결 방법]\n1. https://aistudio.google.com/app/apikey 에 접속하여 새 무료 API 키를 발급받으세요.\n2. 발급받은 키(AIzaSy...) 또는 cURL 명령어 전체를 아래 입력창에 붙여넣고 [키/cURL 적용]을 누르면 해결됩니다.");
+                    if (tempInput) {
+                        tempInput.classList.add('border-red-500', 'ring-2', 'ring-red-500');
+                        tempInput.focus();
+                    }
+                } else {
+                    alert("AI 피드백 생성 실패: " + err.message);
+                }
             } finally {
                 overlay.classList.add('hidden');
                 generateBtn.disabled = false;
@@ -1259,8 +1303,9 @@
 
         async function batchGenerateAIFeedback() {
             const apiKey = getEffectiveApiKey();
-            if (!apiKey) {
-                alert("Gemini API 키가 설정되지 않았습니다.\n\n코드 상단의 'const GEMINI_API_KEY = \"\";'에 키를 입력하거나, 교사 대시보드의 피드백 창에서 API 키를 입력해 주세요.");
+            if (!apiKey || apiKey.length < 10) {
+                alert("Gemini API 키가 설정되지 않았습니다.\n\n상단 [API 키 설정] 버튼이나 교사 대시보드의 피드백 창에서 API 키를 입력해 주세요.");
+                promptSetApiKey();
                 return;
             }
 
@@ -1292,7 +1337,15 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
                     });
-                    if (response.ok) {
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        const msg = errData.error?.message || '';
+                        if (msg.includes('API key not valid') || response.status === 400 || response.status === 403) {
+                            alert("❌ Gemini API 키가 유효하지 않아 일괄 생성이 중단되었습니다.\n\n올바른 API 키(AIzaSy...)를 설정 후 다시 시도해 주세요.");
+                            promptSetApiKey();
+                            return;
+                        }
+                    } else {
                         const data = await response.json();
                         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
                         if (text && window.saveFeedbackToRealtimeDB) {
