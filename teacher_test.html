@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[테스트] 교사 대시보드 - AI 피드백 및 파이어베이스 연동 테스트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Pretendard', 'sans-serif'],
+                    },
+                    colors: {
+                        space: {
+                            900: '#0B0F19',
+                            800: '#151C2C',
+                            700: '#1E293B',
+                            teacher: '#10B981',
+                            highlight: '#8B5CF6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0B0F19;
+            color: #F8FAFC;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.12), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
+            background-attachment: fixed;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #151C2C; }
+        ::-webkit-scrollbar-thumb { background: #10B981; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #059669; }
+    
+        /* ===== 로그 수집 패널 CSS ===== */
+        .log-entry { border-left: 3px solid; padding: 5px 8px; margin-bottom: 3px; border-radius: 0 5px 5px 0; font-size: 11px; line-height: 1.4; font-family: monospace; }
+        .log-success { border-color: #10b981; background: rgba(16,185,129,0.08); color: #6ee7b7; }
+        .log-error   { border-color: #ef4444; background: rgba(239,68,68,0.09);  color: #fca5a5; }
+        .log-warn    { border-color: #f59e0b; background: rgba(245,158,11,0.08); color: #fcd34d; }
+        .log-info    { border-color: #6366f1; background: rgba(99,102,241,0.08); color: #a5b4fc; }
+        .log-retry   { border-color: #8b5cf6; background: rgba(139,92,246,0.08); color: #c4b5fd; }
+        @keyframes pulse-amber {
+          0%,100%{ box-shadow: 0 0 0 0 rgba(245,158,11,.4); }
+          70%    { box-shadow: 0 0 0 6px rgba(245,158,11,0); }
+        }
+        .badge-test { animation: pulse-amber 2s infinite; }
+
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans">
+
+    <!-- Header -->
+    <header class="bg-space-800 border-b border-emerald-900/60 sticky top-0 z-40 shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-300">
+                    <i class="fa-solid fa-flask mr-2 text-amber-400"></i>교사 대시보드 <span class="text-amber-400">[테스트]</span>
+                </h1>
+                <p class="text-sm text-gray-400 mt-1">21세기 우주 탐사 프로젝트 | 지도교사 관제 시스템</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span id="headerAuthBadge" class="px-3 py-1 bg-emerald-950/80 border border-emerald-500/50 rounded-full text-xs text-emerald-300 font-semibold flex items-center">
+                    <span class="badge-test px-2 py-0.5 bg-amber-950/80 border border-amber-500/60 rounded-full text-xs text-amber-300 font-bold mr-2">AI & Firebase 로그 ON</span>
+                    <i class="fa-solid fa-shield-halved mr-1.5 text-emerald-400"></i>인증됨
+                </span>
+                <button onclick="lockTeacherDashboard()" class="px-3 py-1.5 bg-red-900/30 hover:bg-red-900/50 text-red-300 border border-red-700/50 rounded-lg text-xs font-semibold flex items-center transition-all">
+                    <i class="fa-solid fa-right-from-bracket mr-1.5"></i> 잠금
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 py-6 flex flex-col xl:flex-row gap-6">
+        <!-- 대시보드 영역 -->
+        <div class="flex-grow min-w-0">
+        
+        <section id="stepTeacher">
+            <div class="bg-space-800 rounded-2xl p-6 md:p-8 border border-emerald-800/60 shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-10">
+                    <i class="fa-solid fa-chalkboard-teacher text-9xl text-emerald-500"></i>
+                </div>
+
+                <!-- Top Control Bar -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10 border-b border-gray-700 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-emerald-400 flex items-center">
+                            <span class="bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-lg mr-3 text-sm">Teacher Only</span>학생 제출 현황 및 AI 피드백
+                        </h2>
+                        <p class="text-sm text-gray-400 mt-1">학생들의 실시간 과제 제출 현황을 확인하고, Gemini AI 기반 맞춤 평가 피드백을 작성합니다.</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="fetchTeacherSubmissions()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-2 rounded-lg font-medium transition-colors flex items-center shadow">
+                            <i class="fa-solid fa-rotate-right mr-1.5"></i> 새로고침
+                        </button>
+                        <button onclick="batchGenerateAIFeedback()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white border border-purple-500/40 text-xs px-3.5 py-2 rounded-lg font-medium transition-all flex items-center shadow">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> ✨ 일괄 AI 피드백
+                        </button>
+                        <button onclick="promptSetApiKey()" class="bg-space-700 hover:bg-space-600 text-amber-300 border border-amber-600/50 text-xs px-3.5 py-2 rounded-lg font-medium transition-colors flex items-center">
+                            <i class="fa-solid fa-key mr-1.5 text-amber-400"></i> API 키 설정
+                        </button>
+                        <button onclick="exportToCSV()" class="bg-space-700 hover:bg-space-600 text-gray-200 border border-gray-600 text-xs px-3.5 py-2 rounded-lg font-medium transition-colors flex items-center">
+                            <i class="fa-solid fa-file-csv text-emerald-400 mr-1.5"></i> CSV 다운로드
+                        </button>
+                        <button onclick="openChangePasswordModal()" class="bg-space-700 hover:bg-space-600 text-gray-300 border border-gray-600 text-xs px-3 py-2 rounded-lg transition-colors">
+                            <i class="fa-solid fa-lock mr-1"></i> 암호 변경
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats summary badges -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 relative z-10">
+                    <div class="bg-space-900/80 border border-gray-700 p-4 rounded-xl text-center">
+                        <span class="text-xs text-gray-400 block">전체 모둠 수</span>
+                        <span class="text-2xl font-bold text-white mt-1 block">11 모둠</span>
+                    </div>
+                    <div class="bg-space-900/80 border border-emerald-900/50 p-4 rounded-xl text-center">
+                        <span class="text-xs text-emerald-400 block">제출 완료 모둠</span>
+                        <span id="submittedCount" class="text-2xl font-bold text-emerald-400 mt-1 block">0 모둠</span>
+                    </div>
+                    <div class="bg-space-900/80 border border-gray-700 p-4 rounded-xl text-center">
+                        <span class="text-xs text-gray-400 block">미제출 모둠</span>
+                        <span id="unsubmittedCount" class="text-2xl font-bold text-yellow-400 mt-1 block">11 모둠</span>
+                    </div>
+                    <div class="bg-space-900/80 border border-gray-700 p-4 rounded-xl text-center">
+                        <span class="text-xs text-gray-400 block">제출율</span>
+                        <span id="submissionRate" class="text-2xl font-bold text-blue-400 mt-1 block">0%</span>
+                    </div>
+                </div>
+
+                <!-- Submissions Filter & Search -->
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4 relative z-10">
+                    <div class="w-full sm:w-auto flex items-center space-x-2">
+                        <label class="text-xs text-gray-400 whitespace-nowrap">모둠 필터:</label>
+                        <select id="teacherFilterGroup" onchange="renderSubmissionsTable()" class="bg-space-900 border border-gray-700 text-white text-xs rounded-lg p-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            <option value="ALL">전체 보기</option>
+                            <script>
+                                for(let i=1; i<=11; i++){
+                                    document.write(`<option value="${i}모둠">${i}모둠</option>`);
+                                }
+                            </script>
+                        </select>
+                    </div>
+                    <div class="w-full sm:w-64">
+                        <input type="text" id="teacherSearchInput" oninput="renderSubmissionsTable()" placeholder="주제 또는 요약 내용 검색..." 
+                            class="w-full bg-space-900 border border-gray-700 text-white text-xs rounded-lg p-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <!-- Submissions Table -->
+                <div class="overflow-x-auto rounded-xl border border-gray-700 bg-space-900/70 relative z-10">
+                    <table class="w-full text-left text-sm text-gray-300">
+                        <thead class="text-xs uppercase bg-space-700 text-gray-300 border-b border-gray-600">
+                            <tr>
+                                <th class="px-4 py-3">모둠</th>
+                                <th class="px-4 py-3">탐사 주제</th>
+                                <th class="px-4 py-3">AI 대화 요약</th>
+                                <th class="px-4 py-3">AI 맞춤 피드백</th>
+                                <th class="px-4 py-3 whitespace-nowrap">제출 시간</th>
+                                <th class="px-4 py-3 text-center whitespace-nowrap">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacherSubmissionsTbody" class="divide-y divide-gray-800">
+                            <tr>
+                                <td colspan="6" class="text-center py-8 text-gray-500">
+                                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block text-emerald-400"></i>
+                                    제출 내역을 불러오는 중입니다...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </section>
+
+    
+        </div> <!-- 대시보드 영역 끝 -->
+
+        <!-- ===== AI & 파이어베이스 실시간 로그 수집 패널 ===== -->
+        <div class="w-full xl:w-96 shrink-0 space-y-4">
+            <div class="bg-space-800 rounded-2xl border border-purple-800/60 shadow-xl overflow-hidden sticky top-20">
+                <div class="px-4 py-3 border-b border-purple-900/60 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-purple-300 flex items-center">
+                        <i class="fa-solid fa-terminal mr-2 text-purple-400"></i>AI & DB 로그 수집
+                        <span id="logErrorBadge" class="ml-2 hidden px-1.5 py-0.5 bg-red-900/60 text-red-300 text-xs rounded-full border border-red-700 font-bold">0 오류</span>
+                    </h3>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="downloadLog()" class="text-xs text-gray-400 hover:text-white px-2 py-1 rounded bg-space-700 hover:bg-space-600 transition-colors">
+                            <i class="fa-solid fa-download mr-1"></i>.txt
+                        </button>
+                        <button onclick="copyLog()" class="text-xs text-gray-400 hover:text-white px-2 py-1 rounded bg-space-700 hover:bg-space-600 transition-colors">
+                            <i class="fa-solid fa-copy mr-1"></i>복사
+                        </button>
+                        <button onclick="clearLog()" class="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded bg-red-900/20 hover:bg-red-900/40 transition-colors">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="px-4 py-2 bg-space-900/60 border-b border-gray-800 flex gap-3 text-xs flex-wrap">
+                    <span class="text-gray-400">총 <strong id="logTotal" class="text-white">0</strong></span>
+                    <span class="text-emerald-400">성공 <strong id="logSuccess">0</strong></span>
+                    <span class="text-red-400">실패 <strong id="logErrors">0</strong></span>
+                    <span class="text-amber-400">경고 <strong id="logWarnings">0</strong></span>
+                    <span class="text-purple-400">재시도 <strong id="logRetries">0</strong></span>
+                </div>
+
+                <div id="logPanel" class="p-3 space-y-1 overflow-y-auto max-h-[480px]">
+                    <div class="text-gray-600 text-center py-6 text-xs font-mono" id="logEmptyMsg">
+                        <i class="fa-solid fa-scroll text-xl mb-2 block opacity-30"></i>
+                        파이어베이스 데이터 조회가 여기에 기록됩니다.
+                    </div>
+                </div>
+
+                <div class="px-4 py-2 border-t border-gray-800 flex items-center gap-2 flex-wrap">
+                    <span class="text-xs text-gray-500">필터:</span>
+                    <button onclick="filterLog('ALL')" id="filterAll" class="filter-btn text-xs px-2 py-0.5 rounded border border-gray-600 text-gray-300">전체</button>
+                    <button onclick="filterLog('error')" id="filterError" class="filter-btn text-xs px-2 py-0.5 rounded border border-red-800/60 text-red-400">오류</button>
+                    <button onclick="filterLog('warn')" id="filterWarn" class="filter-btn text-xs px-2 py-0.5 rounded border border-amber-800/60 text-amber-400">경고</button>
+                    <button onclick="filterLog('success')" id="filterSuccess" class="filter-btn text-xs px-2 py-0.5 rounded border border-emerald-800/60 text-emerald-400">성공</button>
+                </div>
+            </div>
+
+            <!-- 빠른 테스트 버튼 -->
+            <div class="bg-space-800 rounded-2xl border border-gray-700 p-4">
+                <h3 class="text-xs font-bold text-gray-300 mb-3 flex items-center">
+                    <i class="fa-solid fa-vials mr-2 text-amber-400"></i>파이어베이스 & AI 테스트
+                </h3>
+                <div class="space-y-2">
+                    <button onclick="fetchTeacherSubmissions()" class="w-full text-xs bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-300 border border-emerald-700/50 py-2 px-3 rounded-lg transition-colors flex items-center">
+                        <i class="fa-solid fa-database mr-2"></i>파이어베이스 데이터 직접 다시 읽기
+                    </button>
+                    <button onclick="testSingleFeedback()" class="w-full text-xs bg-purple-900/40 hover:bg-purple-800/60 text-purple-300 border border-purple-700/50 py-2 px-3 rounded-lg transition-colors flex items-center">
+                        <i class="fa-solid fa-flask mr-2"></i>더미 데이터로 AI 피드백 테스트
+                    </button>
+                    <button onclick="testApiKeyValidity()" class="w-full text-xs bg-blue-900/40 hover:bg-blue-800/60 text-blue-300 border border-blue-700/50 py-2 px-3 rounded-lg transition-colors flex items-center">
+                        <i class="fa-solid fa-plug mr-2"></i>Gemini API 키 유효성 검사
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Password Modal for Teacher Access -->
+    <div id="teacherAuthModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-space-800 border border-emerald-500/40 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl relative">
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 bg-emerald-500/20 border border-emerald-500/50 rounded-full flex items-center justify-center mx-auto mb-3 text-emerald-400 text-2xl">
+                    <i class="fa-solid fa-user-lock"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">교사 전용 대시보드 인증</h3>
+                <p class="text-xs text-gray-400 mt-1">대시보드 관제 시스템에 접근하려면 교사 비밀번호를 입력하세요.</p>
+                <p class="text-xs text-emerald-400/80 mt-1">(초기 비밀번호: <span class="font-mono bg-space-900 px-1.5 py-0.5 rounded">1234</span>)</p>
+            </div>
+
+            <form onsubmit="handleTeacherAuthSubmit(event)" class="space-y-4">
+                <div>
+                    <label for="teacherPasswordInput" class="block text-xs font-medium text-gray-300 mb-1">비밀번호</label>
+                    <input type="password" id="teacherPasswordInput" required placeholder="비밀번호 입력..." 
+                        class="w-full bg-space-900 border border-gray-600 text-white text-sm rounded-lg p-3 focus:ring-emerald-500 focus:border-emerald-500">
+                </div>
+
+                <div id="pwErrorMsg" class="hidden p-2.5 bg-red-950/60 border border-red-800/80 rounded-lg text-xs text-red-300 text-center">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i> 비밀번호가 올바르지 않습니다. 다시 시도해주세요.
+                </div>
+
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-lg">
+                    대시보드 접속하기
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Password Change Modal -->
+    <div id="changePwModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-space-800 border border-gray-700 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
+            <button onclick="closeChangePwModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                <i class="fa-solid fa-key text-emerald-400 mr-2"></i> 교사 비밀번호 변경
+            </h3>
+
+            <form onsubmit="handleChangePasswordSubmit(event)" class="space-y-4">
+                <div>
+                    <label for="currentPw" class="block text-xs font-medium text-gray-300 mb-1">현재 비밀번호</label>
+                    <input type="password" id="currentPw" required class="w-full bg-space-900 border border-gray-600 text-white text-sm rounded-lg p-2.5">
+                </div>
+                <div>
+                    <label for="newPw" class="block text-xs font-medium text-gray-300 mb-1">새 비밀번호</label>
+                    <input type="password" id="newPw" required minlength="4" class="w-full bg-space-900 border border-gray-600 text-white text-sm rounded-lg p-2.5">
+                </div>
+                <div>
+                    <label for="confirmNewPw" class="block text-xs font-medium text-gray-300 mb-1">새 비밀번호 확인</label>
+                    <input type="password" id="confirmNewPw" required class="w-full bg-space-900 border border-gray-600 text-white text-sm rounded-lg p-2.5">
+                </div>
+
+                <div id="changePwMsg" class="hidden p-2 bg-space-900 text-xs rounded text-center"></div>
+
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeChangePwModal()" class="w-1/2 bg-space-700 hover:bg-space-600 text-gray-300 py-2 rounded-lg text-sm transition-colors">
+                        취소
+                    </button>
+                    <button type="submit" class="w-1/2 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-sm font-medium transition-colors">
+                        변경 저장
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-space-800 border border-red-800/80 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center">
+            <div class="w-12 h-12 bg-red-900/30 text-red-400 rounded-full flex items-center justify-center mx-auto mb-3 text-xl border border-red-800">
+                <i class="fa-solid fa-trash"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">제출 내역 삭제</h3>
+            <p class="text-xs text-gray-300 mb-6" id="deleteModalTargetName">이 학생 모둠의 제출 기록을 삭제하시겠습니까?</p>
+            <div class="flex gap-2">
+                <button onclick="closeDeleteModal()" class="w-1/2 bg-space-700 hover:bg-space-600 text-gray-300 py-2 rounded-lg text-sm">
+                    취소
+                </button>
+                <button id="confirmDeleteBtn" class="w-1/2 bg-red-600 hover:bg-red-500 text-white py-2 rounded-lg text-sm font-medium">
+                    삭제하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Feedback Modal -->
+    <div id="aiFeedbackModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-space-800 border border-purple-500/40 rounded-2xl p-6 md:p-8 max-w-2xl w-full shadow-2xl relative max-h-[90vh] flex flex-col">
+            <button onclick="closeAIFeedbackModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-gray-700">
+                <div class="w-10 h-10 bg-purple-600/20 border border-purple-500/40 rounded-xl flex items-center justify-center text-purple-400 text-lg">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <span>AI 학생 맞춤 피드백</span>
+                        <span id="feedbackGroupBadge" class="text-xs bg-purple-900/60 text-purple-300 px-2 py-0.5 rounded border border-purple-700/50"></span>
+                    </h3>
+                    <p class="text-xs text-gray-400">Gemini AI 기반 과학 탐구 과정 및 결과 피드백 생성</p>
+                </div>
+            </div>
+
+            <!-- Scrollable Content Container -->
+            <div class="overflow-y-auto flex-grow pr-1 space-y-4">
+
+                <!-- Submission Summary Card -->
+                <div class="bg-space-900/90 border border-gray-700 rounded-xl p-4 space-y-2">
+                    <div class="flex items-center justify-between text-xs text-gray-400 border-b border-gray-800 pb-2">
+                        <span class="font-semibold text-emerald-400" id="feedbackTopicTitle">주제</span>
+                        <span id="feedbackSubmitTime">제출시간</span>
+                    </div>
+                    <div class="text-xs text-gray-300 bg-space-800/80 p-2.5 rounded border border-gray-700/60">
+                        <span class="text-gray-400 font-semibold block mb-1">💬 학생 제출 AI 대화 요약:</span>
+                        <p id="feedbackStudentSummary" class="whitespace-pre-wrap leading-relaxed text-gray-200"></p>
+                    </div>
+                </div>
+
+                <!-- API Key Alert / Quick Input Section -->
+                <div id="apiKeyNoticeBox" class="bg-amber-950/40 border border-amber-600/40 rounded-xl p-3 text-xs space-y-2">
+                    <div class="flex items-center justify-between text-amber-300 font-medium">
+                        <span><i class="fa-solid fa-key mr-1.5 text-amber-400"></i>Gemini API 키 / cURL 명령어 입력</span>
+                        <span class="text-[10px] text-amber-400/70">현재 키 상태: <strong id="apiKeyStatusText" class="text-red-400">비어있음</strong></span>
+                    </div>
+                    <p class="text-gray-300 leading-relaxed">
+                        API 키 또는 Google AI Studio에서 복사한 <code class="bg-space-900 text-amber-300 px-1 py-0.5 rounded">cURL 명령어</code> 전체를 그대로 붙여넣으셔도 자동으로 API 키만 추출됩니다.
+                    </p>
+                    <div class="flex gap-2 pt-1">
+                        <input type="text" id="tempApiKeyInput" placeholder="API 키(AIzaSy...) 또는 cURL 명령어 붙여넣기" 
+                            class="flex-grow bg-space-900 border border-amber-700/60 text-white text-xs rounded-lg px-3 py-1.5 focus:ring-amber-500 focus:border-amber-500 font-mono">
+                        <button onclick="saveTempApiKey()" class="bg-amber-600 hover:bg-amber-500 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+                            키/cURL 적용
+                        </button>
+                        <button onclick="clearSavedApiKey()" class="bg-space-700 hover:bg-space-600 text-gray-300 border border-gray-600 font-medium px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap" title="저장된 API 키 초기화">
+                            초기화
+                        </button>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs pt-2 border-t border-amber-800/40">
+                        <span class="text-gray-300 flex items-center"><i class="fa-solid fa-microchip text-amber-400 mr-1.5"></i>Gemini 모델 선택 (무료 쿼터 호환):</span>
+                        <select id="geminiModelSelect" onchange="onModelSelectChange()" class="bg-space-900 border border-amber-700/60 text-amber-300 text-xs rounded px-2.5 py-1 focus:ring-amber-500 focus:border-amber-500">
+                            <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (무료 티어 쿼터 호환 1위)</option>
+                            <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite (경량 무료)</option>
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro (고성능)</option>
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Feedback Display & Edit Area -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="feedbackTextarea" class="text-xs font-semibold text-gray-300 flex items-center">
+                            <i class="fa-solid fa-comment-dots text-purple-400 mr-1.5"></i>교사 피드백 내용 (수정 가능)
+                        </label>
+                        <span id="feedbackSaveStatus" class="text-[11px] text-emerald-400 hidden"><i class="fa-solid fa-check mr-1"></i>저장됨</span>
+                    </div>
+
+                    <div class="relative">
+                        <textarea id="feedbackTextarea" rows="8" placeholder="[AI 피드백 생성] 버튼을 클릭하거나, 직접 피드백을 작성해 주세요."
+                            class="w-full bg-space-900 border border-gray-700 text-gray-100 text-sm rounded-xl p-3.5 focus:ring-purple-500 focus:border-purple-500 leading-relaxed resize-none"></textarea>
+                        
+                        <!-- Generating Overlay -->
+                        <div id="aiGeneratingOverlay" class="absolute inset-0 bg-space-900/90 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center space-y-3 hidden">
+                            <div class="relative flex items-center justify-center">
+                                <i class="fa-solid fa-wand-magic-sparkles text-3xl text-purple-400 animate-bounce"></i>
+                            </div>
+                            <p class="text-sm font-semibold text-purple-300 flex items-center">
+                                <i class="fa-solid fa-spinner fa-spin mr-2"></i>
+                                <span id="generatingStatusMsg">Gemini AI 피드백을 생성하고 있습니다...</span>
+                            </p>
+                            <p class="text-xs text-gray-400">과학적 탐구 기준 및 비판적 사고력을 종합 평가 중</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer Controls -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-4 mt-2 border-t border-gray-700">
+                <button onclick="triggerAIFeedbackGeneration()" id="generateBtn" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium px-4 py-2 rounded-xl text-xs flex items-center shadow-lg transition-all transform hover:scale-[1.02]">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> ✨ AI 피드백 생성
+                </button>
+                <div class="flex items-center space-x-2">
+                    <button onclick="copyFeedbackToClipboard()" class="bg-space-700 hover:bg-space-600 text-gray-200 border border-gray-600 px-3 py-2 rounded-xl text-xs transition-colors flex items-center">
+                        <i class="fa-solid fa-copy mr-1.5 text-blue-400"></i> 복사
+                    </button>
+                    <button onclick="saveCurrentFeedback()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center">
+                        <i class="fa-solid fa-floppy-disk mr-1.5"></i> 피드백 저장
+                    </button>
+                    <button onclick="closeAIFeedbackModal()" class="bg-space-700 hover:bg-space-600 text-gray-400 px-3 py-2 rounded-xl text-xs transition-colors">
+                        닫기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="border-t border-gray-800 mt-auto py-6 text-center text-gray-500 text-sm">
+        <p>21세기 우주 탐사 프로젝트 - 교사 전용 관제 및 학생 맞춤 평가 시스템</p>
+    </footer>
+
+    <!-- Firebase Realtime Database Module -->
+    
+    <!-- Global Logging System -->
+    <script>
+        // 전역 로그 수집 시스템
+        window.logStore = [];
+        window.logStats = { total: 0, success: 0, error: 0, warn: 0, retry: 0 };
+        window.currentFilter = 'ALL';
+
+        window.addLog = function(level, source, message, details = {}) {
+            const ts = new Date();
+            const timeStr = ts.toLocaleTimeString('ko-KR', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const msStr = String(ts.getMilliseconds()).padStart(3, '0');
+            const entry = { id: Date.now() + Math.random(), level, source, message, details, timestamp: ts.toISOString(), timeStr: timeStr + '.' + msStr };
+            window.logStore.push(entry);
+            window.logStats.total++;
+            if (level === 'success') window.logStats.success++;
+            else if (level === 'error')  window.logStats.error++;
+            else if (level === 'warn')   window.logStats.warn++;
+            else if (level === 'retry')  window.logStats.retry++;
+            
+            if (window.updateLogStats) window.updateLogStats();
+            if (window.renderLogEntry) window.renderLogEntry(entry);
+            
+            const fn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log;
+            fn('[' + level.toUpperCase() + '][' + source + '] ' + message, details);
+        };
+
+        window.updateLogStats = function() {
+            const totalEl = document.getElementById('logTotal');
+            if (totalEl) totalEl.textContent = window.logStats.total;
+            const successEl = document.getElementById('logSuccess');
+            if (successEl) successEl.textContent = window.logStats.success;
+            const errorEl = document.getElementById('logErrors');
+            if (errorEl) errorEl.textContent = window.logStats.error;
+            const warnEl = document.getElementById('logWarnings');
+            if (warnEl) warnEl.textContent = window.logStats.warn;
+            const retryEl = document.getElementById('logRetries');
+            if (retryEl) retryEl.textContent = window.logStats.retry;
+
+            const badge = document.getElementById('logErrorBadge');
+            if (badge) {
+                if (window.logStats.error > 0) { badge.textContent = window.logStats.error + ' 오류'; badge.classList.remove('hidden'); }
+                else badge.classList.add('hidden');
+            }
+        };
+
+        window.renderLogEntry = function(entry) {
+            const panel = document.getElementById('logPanel');
+            if (!panel) return;
+            const emptyMsg = document.getElementById('logEmptyMsg');
+            if (emptyMsg) emptyMsg.remove();
+
+            const visible = window.currentFilter === 'ALL' || entry.level === window.currentFilter;
+            const cssMap = { success: 'log-success', error: 'log-error', warn: 'log-warn', info: 'log-info', retry: 'log-retry' };
+            const iconMap = { success: 'fa-circle-check', error: 'fa-circle-xmark', warn: 'fa-triangle-exclamation', info: 'fa-circle-info', retry: 'fa-rotate-right' };
+            
+            let detailStr = '';
+            if (entry.details && Object.keys(entry.details).length > 0) {
+                detailStr = ' <span class="opacity-50 text-[10px]">' + Object.entries(entry.details).map(([k,v]) => k + ':' + v).join(' | ') + '</span>';
+            }
+            const div = document.createElement('div');
+            div.className = 'log-entry ' + (cssMap[entry.level] || 'log-info') + (visible ? '' : ' hidden');
+            div.dataset.level = entry.level;
+            div.innerHTML =
+                '<span class="opacity-50">' + entry.timeStr + '</span> ' +
+                '<i class="fa-solid ' + (iconMap[entry.level] || 'fa-circle-info') + ' mx-1"></i>' +
+                '<strong>[' + entry.source + ']</strong> ' + (String(entry.message).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')) + detailStr;
+            panel.appendChild(div);
+            panel.scrollTop = panel.scrollHeight;
+        };
+
+        window.filterLog = function(level) {
+            window.currentFilter = level;
+            document.querySelectorAll('#logPanel .log-entry').forEach(el => {
+                el.classList.toggle('hidden', level !== 'ALL' && el.dataset.level !== level);
+            });
+        };
+
+        window.clearLog = function() {
+            if (!confirm('로그를 초기화하시겠습니까?')) return;
+            window.logStore.length = 0;
+            window.logStats = { total: 0, success: 0, error: 0, warn: 0, retry: 0 };
+            window.updateLogStats();
+            const panel = document.getElementById('logPanel');
+            if (panel) panel.innerHTML = '<div class="text-gray-600 text-center py-6 text-xs font-mono" id="logEmptyMsg"><i class="fa-solid fa-scroll text-xl mb-2 block opacity-30"></i>로그가 초기화되었습니다</div>';
+            const badge = document.getElementById('logErrorBadge');
+            if (badge) badge.classList.add('hidden');
+        };
+
+        window.buildLogText = function() {
+            const hdr = '=== AI & Firebase 로그 보고서 ===\n생성: ' + new Date().toLocaleString('ko-KR') +
+                '\n총:' + window.logStats.total + ' 성공:' + window.logStats.success + ' 실패:' + window.logStats.error + ' 경고:' + window.logStats.warn + ' 재시도:' + window.logStats.retry +
+                '\n' + '='.repeat(50) + '\n';
+            return hdr + window.logStore.map(e => {
+                let line = '[' + e.timeStr + '] [' + e.level.toUpperCase().padEnd(7) + '] [' + e.source + '] ' + e.message;
+                if (e.details && Object.keys(e.details).length > 0)
+                    line += '\n  ' + Object.entries(e.details).map(([k,v]) => k + '=' + v).join(' | ');
+                return line;
+            }).join('\n');
+        };
+
+        window.downloadLog = function() {
+            const blob = new Blob([window.buildLogText()], { type: 'text/plain;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'teacher_test_log_' + new Date().toISOString().slice(0,19).replace(/:/g,'-') + '.txt';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        };
+
+        window.copyLog = function() {
+            navigator.clipboard.writeText(window.buildLogText())
+                .then(() => alert('로그가 클립보드에 복사되었습니다!'))
+                .catch(() => alert('복사 실패'));
+        };
+
+        window.testSingleFeedback = async function() {
+            const apiKey = getEffectiveApiKey();
+            if (!apiKey) { alert('API 키를 먼저 설정해 주세요.'); return; }
+            window.addLog('info', 'TEST', '더미 데이터로 단일 AI 피드백 생성 테스트 시도');
+            const dummy = { groupNumber: '테스트모둠', topicTitle: '우주망원경 탐사', chatSummary: '망원경 관측 데이터 분석 논의' };
+            try {
+                const promptText = `당신은 중학교 과학 교사입니다. 학생 모둠의 21세기 우주 탐사 프로젝트 제출 결과를 평가하고 따뜻한 피드백을 작성하세요.
+
+[학생 제출 데이터]
+- 모둠: ${dummy.groupNumber}
+- 탐사 주제: ${dummy.topicTitle}
+- AI 대화 요약 내용: ${dummy.chatSummary}
+
+친절한 어조로 300자 내외 피드백 작성.`;
+                const result = await callGeminiApiWithFallback(apiKey, promptText, dummy.groupNumber);
+                window.addLog('success', 'TEST', '단일 피드백 생성 성공', { model: result.modelUsed, chars: result.text.length });
+                alert(`테스트 성공!
+모델: ${result.modelUsed}
+내용:
+${result.text.substring(0, 150)}...`);
+            } catch (e) {
+                window.addLog('error', 'TEST', '단일 피드백 생성 실패: ' + e.message);
+                alert('테스트 실패: ' + e.message);
+            }
+        };
+
+        window.testApiKeyValidity = async function() {
+            const apiKey = getEffectiveApiKey();
+            if (!apiKey) { alert('API 키를 먼저 설정해 주세요.'); return; }
+            window.addLog('info', 'KEY_CHECK', 'Gemini API 키 유효성 체크 시작');
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+                    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: 'hi' }] }] }) });
+                if (res.ok) {
+                    window.addLog('success', 'KEY_CHECK', 'Gemini API 키 정상 작동');
+                    alert('API 키가 유효합니다!');
+                } else {
+                    window.addLog('error', 'KEY_CHECK', 'Gemini API 키 오류', { status: res.status });
+                    alert('API 키 오류 HTTP ' + res.status);
+                }
+            } catch(e) {
+                window.addLog('error', 'KEY_CHECK', 'API 키 체크 네트워크 에러: ' + e.message);
+            }
+        };
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, push, get, child, remove, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAryukXVBSeU4Gu7qz0e4AlBJTksJlIRE",
+            authDomain: "ms3-21th-century-space.firebaseapp.com",
+            databaseURL: "https://ms3-21th-century-space-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ms3-21th-century-space",
+            storageBucket: "ms3-21th-century-space.firebasestorage.app",
+            messagingSenderId: "278442658555",
+            appId: "1:278442658555:web:5fe68af291928798197e5e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, "https://ms3-21th-century-space-default-rtdb.asia-southeast1.firebasedatabase.app");
+
+        function withTimeout(promise, ms = 4000, errorMsg = "서버 응답 시간 초과") {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error(errorMsg)), ms))
+            ]);
+        }
+
+        window.fetchRealtimeSubmissions = async function() {
+            let firebaseResults = [];
+            window.addLog?.('info', 'Firebase', 'Realtime Database에서 제출 내역 조회 시작...');
+            try {
+                const dbRef = ref(db);
+                const snapshot = await withTimeout(get(child(dbRef, "submissions")), 5000, "Firebase 조회 초과");
+                if (snapshot.exists()) {
+                    const dataObj = snapshot.val();
+                    Object.keys(dataObj).forEach((key) => {
+                        const data = dataObj[key];
+                        let submittedAt = new Date();
+                        if (data.submittedAt) {
+                            const parsed = new Date(data.submittedAt);
+                            submittedAt = isNaN(parsed.getTime()) ? new Date() : parsed;
+                        }
+                        firebaseResults.push({
+                            id: key,
+                            groupNumber: data.groupNumber || "모둠 미지정",
+                            topicTitle: data.topicTitle || "주제 없음",
+                            chatSummary: data.chatSummary || "요약 없음",
+                            feedback: data.feedback || "",
+                            submittedAt: submittedAt,
+                            isLocal: false
+                        });
+                    });
+                    window.addLog?.('success', 'Firebase', `파이어베이스에서 총 ${firebaseResults.length}개 제출 데이터를 성공적으로 조회했습니다.`);
+                } else {
+                    window.addLog?.('warn', 'Firebase', '파이어베이스에 등록된 제출 내역 노드가 비어 있습니다.');
+                }
+            } catch (error) {
+                window.addLog?.('warn', 'Firebase', `파이어베이스 조회 실패 (로컬 데이터 병합 사용): ${error.message}`);
+                console.warn("Firebase fetch warning (using local fallback):", error);
+            }
+
+            let localResults = [];
+            try {
+                const localData = JSON.parse(localStorage.getItem('local_submissions') || '[]');
+                localResults = localData.map(item => {
+                    let submittedAt = new Date();
+                    if (item.submittedAt) {
+                        const parsed = new Date(item.submittedAt);
+                        submittedAt = isNaN(parsed.getTime()) ? new Date() : parsed;
+                    }
+                    return {
+                        id: item.id,
+                        groupNumber: item.groupNumber || "모둠 미지정",
+                        topicTitle: item.topicTitle || "주제 없음",
+                        chatSummary: item.chatSummary || "요약 없음",
+                        feedback: item.feedback || "",
+                        submittedAt: submittedAt,
+                        isLocal: true
+                    };
+                });
+            } catch (e) {
+                console.error("Failed to read local storage:", e);
+            }
+
+            // ★ 수정: groupNumber 기준 중복 제거 시 Firebase 우선하되,
+            //         Firebase 항목에 피드백이 없고 local에 피드백이 있으면 local 피드백을 병합
+            const map = new Map();
+            localResults.forEach(item => map.set(item.groupNumber, item));
+            firebaseResults.forEach(fbItem => {
+                const existing = map.get(fbItem.groupNumber);
+                if (existing && !fbItem.feedback && existing.feedback) {
+                    // Firebase에 피드백이 아직 없을 때 로컬에 저장된 피드백 유지
+                    fbItem.feedback = existing.feedback;
+                }
+                map.set(fbItem.groupNumber, fbItem);
+            });
+
+            const results = Array.from(map.values());
+            results.sort((a, b) => b.submittedAt - a.submittedAt);
+            return results;
+        };
+
+        window.deleteRealtimeSubmission = async function(docId) {
+            let deletedLocal = false;
+            try {
+                const localData = JSON.parse(localStorage.getItem('local_submissions') || '[]');
+                const filtered = localData.filter(item => item.id !== docId);
+                if (filtered.length !== localData.length) {
+                    localStorage.setItem('local_submissions', JSON.stringify(filtered));
+                    deletedLocal = true;
+                }
+            } catch (e) {
+                console.error("Local delete error:", e);
+            }
+
+            if (docId.startsWith('local_')) {
+                return true;
+            }
+
+            try {
+                const itemRef = ref(db, "submissions/" + docId);
+                await withTimeout(remove(itemRef), 3000, "Firebase 삭제 초과");
+                return true;
+            } catch (error) {
+                console.error("Error deleting document:", error);
+                return deletedLocal;
+            }
+        };
+
+        window.saveFeedbackToRealtimeDB = async function(submissionId, feedbackText, groupNumber = null) {
+            // 1. LocalStorage 항상 업데이트 (오프라인 백업)
+            try {
+                const localData = JSON.parse(localStorage.getItem('local_submissions') || '[]');
+                const idx = localData.findIndex(item => item.id === submissionId || (groupNumber && item.groupNumber === groupNumber));
+                if (idx >= 0) {
+                    localData[idx].feedback = feedbackText;
+                } else if (groupNumber) {
+                    localData.push({
+                        id: submissionId,
+                        groupNumber: groupNumber,
+                        feedback: feedbackText,
+                        submittedAt: new Date().toISOString()
+                    });
+                }
+                localStorage.setItem('local_submissions', JSON.stringify(localData));
+            } catch (e) {
+                console.error("Local feedback save error:", e);
+            }
+
+            // 2. Firebase 저장: local_ ID는 직접 경로가 없으므로 groupNumber로 Firebase 노드 탐색 후 저장
+            if (submissionId.startsWith('local_')) {
+                if (!groupNumber) return true;
+                try {
+                    // groupNumber로 Firebase에서 실제 노드 키를 찾아 피드백 저장 시도
+                    const dbRef = ref(db);
+                    const snapshot = await withTimeout(get(child(dbRef, "submissions")), 4000, "Firebase 조회 초과");
+                    if (snapshot.exists()) {
+                        const dataObj = snapshot.val();
+                        const matchKey = Object.keys(dataObj).find(k => dataObj[k].groupNumber === groupNumber);
+                        if (matchKey) {
+                            const itemRef = ref(db, "submissions/" + matchKey + "/feedback");
+                            await withTimeout(set(itemRef, feedbackText), 4000, "Firebase feedback save timeout");
+                            return true;
+                        }
+                    }
+                } catch (error) {
+                    console.warn("Firebase feedback save (local_ id) warning:", error);
+                }
+                return true; // local에는 저장됨
+            }
+
+            // 3. Firebase 직접 경로 저장 (일반 Firebase ID)
+            try {
+                const itemRef = ref(db, "submissions/" + submissionId + "/feedback");
+                await withTimeout(set(itemRef, feedbackText), 5000, "Firebase feedback save timeout");
+                window.addLog?.('success', 'Firebase', `[${groupNumber || submissionId}] 피드백이 파이어베이스에 성공적으로 저장되었습니다.`);
+                return true;
+            } catch (error) {
+                window.addLog?.('error', 'Firebase', `[${groupNumber || submissionId}] 파이어베이스 피드백 저장 실패: ${error.message}`);
+                console.warn("Firebase feedback save warning:", error);
+                return false;
+            }
+        };
+    </script>
+
+    <!-- Teacher Script -->
+    <script>
+        // ========================================================
+        // ★ Gemini API 키를 여기에 입력하세요 ★
+        // Google AI Studio(https://aistudio.google.com/app/apikey)에서 발급
+        // ========================================================
+        const GEMINI_API_KEY = ""; // ← 여기에 API 키 입력
+        const GEMINI_MODEL   = "gemini-1.5-flash"; // 기본 모델 (무료 티어 최적)
+        // ★ 기본 모델 제외하고 대체 순서 정의 (중복 없음)
+        const FALLBACK_MODELS = [
+            "gemini-2.0-flash-lite",   // 가장 빠름, 무료 쿼터 여유
+            "gemini-1.5-flash-latest", // flash 최신버전
+            "gemini-2.0-flash",        // 더 강력하지만 쿼터 제한 있음
+            "gemini-1.5-pro"           // 마지막 수단
+        ];
+        // 무료 티어 RPM 한도: gemini-1.5-flash = 15 RPM → 최소 4초 간격
+        // 일괄 생성 시 여유 있게 5초 간격 사용
+        const BATCH_DELAY_MS = 5000;
+
+        // --- Teacher Auth & State Management ---
+        let isTeacherAuthenticated = false;
+        let allSubmissionsData = [];
+        let pendingDeleteDocId = null;
+        let activeSubmissionId = null;
+
+        function getSavedPassword() {
+            return localStorage.getItem('teacherPassword') || '1234';
+        }
+
+        function lockTeacherDashboard() {
+            isTeacherAuthenticated = false;
+            document.getElementById('teacherAuthModal').classList.remove('hidden');
+        }
+
+        function handleTeacherAuthSubmit(event) {
+            event.preventDefault();
+            const inputPw = document.getElementById('teacherPasswordInput').value;
+            const savedPw = getSavedPassword();
+            const errorMsg = document.getElementById('pwErrorMsg');
+
+            if (inputPw === savedPw) {
+                isTeacherAuthenticated = true;
+                document.getElementById('teacherAuthModal').classList.add('hidden');
+                document.getElementById('teacherPasswordInput').value = '';
+                errorMsg.classList.add('hidden');
+                fetchTeacherSubmissions();
+            } else {
+                errorMsg.classList.remove('hidden');
+            }
+        }
+
+        function openChangePasswordModal() {
+            document.getElementById('currentPw').value = '';
+            document.getElementById('newPw').value = '';
+            document.getElementById('confirmNewPw').value = '';
+            document.getElementById('changePwMsg').classList.add('hidden');
+            document.getElementById('changePwModal').classList.remove('hidden');
+        }
+
+        function closeChangePwModal() {
+            document.getElementById('changePwModal').classList.add('hidden');
+        }
+
+        function handleChangePasswordSubmit(event) {
+            event.preventDefault();
+            const curPw = document.getElementById('currentPw').value;
+            const newPw = document.getElementById('newPw').value;
+            const cfPw  = document.getElementById('confirmNewPw').value;
+            const msgEl = document.getElementById('changePwMsg');
+
+            if (curPw !== getSavedPassword()) {
+                msgEl.innerText = "현재 비밀번호가 올바르지 않습니다.";
+                msgEl.className = "p-2 bg-red-900/50 text-red-300 text-xs rounded text-center block";
+                return;
+            }
+            if (newPw !== cfPw) {
+                msgEl.innerText = "새 비밀번호가 서로 일치하지 않습니다.";
+                msgEl.className = "p-2 bg-red-900/50 text-red-300 text-xs rounded text-center block";
+                return;
+            }
+
+            localStorage.setItem('teacherPassword', newPw);
+            msgEl.innerText = "비밀번호가 성공적으로 변경되었습니다!";
+            msgEl.className = "p-2 bg-emerald-900/50 text-emerald-300 text-xs rounded text-center block";
+            setTimeout(() => closeChangePwModal(), 1500);
+        }
+
+        // Delete Modal Handler
+        function openDeleteModal(docId, groupName) {
+            pendingDeleteDocId = docId;
+            document.getElementById('deleteModalTargetName').innerText = `[${groupName}] 제출 내역을 정말 삭제하시겠습니까? (삭제 후 복구 불가)`;
+            document.getElementById('deleteConfirmModal').classList.remove('hidden');
+            
+            document.getElementById('confirmDeleteBtn').onclick = async function() {
+                if (!pendingDeleteDocId) return;
+                this.disabled = true;
+                this.innerText = "삭제 중...";
+                
+                if (window.deleteRealtimeSubmission) {
+                    await window.deleteRealtimeSubmission(pendingDeleteDocId);
+                }
+                
+                closeDeleteModal();
+                fetchTeacherSubmissions();
+            };
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteConfirmModal').classList.add('hidden');
+            pendingDeleteDocId = null;
+            const btn = document.getElementById('confirmDeleteBtn');
+            btn.disabled = false;
+            btn.innerText = "삭제하기";
+        }
+
+        // Submissions Fetch & Render
+        async function fetchTeacherSubmissions() {
+            const tbody = document.getElementById('teacherSubmissionsTbody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-8 text-gray-500">
+                        <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block text-emerald-400"></i>
+                        제출 내역을 불러오는 중입니다...
+                    </td>
+                </tr>
+            `;
+
+            if (window.fetchRealtimeSubmissions) {
+                allSubmissionsData = await window.fetchRealtimeSubmissions();
+            } else {
+                allSubmissionsData = [];
+            }
+
+            renderSubmissionsTable();
+        }
+
+        function renderSubmissionsTable() {
+            const tbody = document.getElementById('teacherSubmissionsTbody');
+            const filterGroup = document.getElementById('teacherFilterGroup').value;
+            const searchQuery = document.getElementById('teacherSearchInput').value.trim().toLowerCase();
+
+            let filtered = allSubmissionsData;
+            if (filterGroup !== 'ALL') {
+                filtered = filtered.filter(item => item.groupNumber === filterGroup);
+            }
+            if (searchQuery) {
+                filtered = filtered.filter(item => 
+                    item.topicTitle.toLowerCase().includes(searchQuery) || 
+                    item.chatSummary.toLowerCase().includes(searchQuery)
+                );
+            }
+
+            const submittedCount = allSubmissionsData.length;
+            const unsubmittedCount = Math.max(0, 11 - submittedCount);
+            const rate = Math.round((submittedCount / 11) * 100);
+
+            document.getElementById('submittedCount').innerText = `${submittedCount} 모둠`;
+            document.getElementById('unsubmittedCount').innerText = `${unsubmittedCount} 모둠`;
+            document.getElementById('submissionRate').innerText = `${rate}%`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-gray-500">
+                            제출된 과제 내역이 없습니다.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(item => {
+                const dateStr = item.submittedAt ? item.submittedAt.toLocaleString('ko-KR', {
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                }) : '-';
+
+                const hasFeedback = item.feedback && item.feedback.trim().length > 0;
+
+                html += `
+                    <tr class="hover:bg-space-800/80 transition-colors border-b border-gray-800">
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="px-2.5 py-1 bg-emerald-900/40 text-emerald-300 rounded-md font-bold text-xs border border-emerald-700/50">
+                                ${item.groupNumber}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 font-medium text-white max-w-xs truncate" title="${item.topicTitle}">
+                            ${item.topicTitle}
+                        </td>
+                        <td class="px-4 py-3 text-xs text-gray-300 max-w-md">
+                            <div class="line-clamp-2 leading-relaxed" title="${item.chatSummary}">${item.chatSummary}</div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-xs">
+                            ${hasFeedback ? `
+                                <button onclick="openAIFeedbackModal('${item.id}')" class="px-2.5 py-1 bg-purple-900/40 hover:bg-purple-800/60 text-purple-300 border border-purple-600/50 rounded-lg font-medium transition-colors flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-check text-emerald-400"></i> 피드백 완료 (보기/수정)
+                                </button>
+                            ` : `
+                                <button onclick="openAIFeedbackModal('${item.id}')" class="px-2.5 py-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-lg font-medium shadow-sm transition-all flex items-center gap-1">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> ✨ AI 피드백
+                                </button>
+                            `}
+                        </td>
+                        <td class="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
+                            ${dateStr}
+                        </td>
+                        <td class="px-4 py-3 text-center whitespace-nowrap">
+                            <button onclick="openDeleteModal('${item.id}', '${item.groupNumber}')" class="text-red-400 hover:text-red-300 p-1.5 rounded hover:bg-red-900/30 transition-colors" title="삭제">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // CSV Export
+        function exportToCSV() {
+            if (allSubmissionsData.length === 0) {
+                alert("다운로드할 제출 내역이 없습니다.");
+                return;
+            }
+
+            let csvContent = "\uFEFF"; // UTF-8 BOM
+            csvContent += "모둠,발표주제,AI대화요약,AI피드백,제출시간\n";
+
+            allSubmissionsData.forEach(item => {
+                const group   = `"${(item.groupNumber || '').replace(/"/g, '""')}"`;
+                const topic   = `"${(item.topicTitle || '').replace(/"/g, '""')}"`;
+                const summary = `"${(item.chatSummary || '').replace(/"/g, '""')}"`;
+                const fb      = `"${(item.feedback || '').replace(/"/g, '""')}"`;
+                const time    = `"${item.submittedAt ? item.submittedAt.toLocaleString('ko-KR') : ''}"`;
+                
+                csvContent += `${group},${topic},${summary},${fb},${time}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `21세기_우주탐사_제출현황_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // API Key Parser & Management
+        function extractApiKeyFromCurlOrText(input) {
+            if (!input) return "";
+            let str = input.trim();
+            const keyParamMatch = str.match(/key=([A-Za-z0-9_\-]+)/);
+            if (keyParamMatch && keyParamMatch[1]) {
+                return keyParamMatch[1];
+            }
+            const aizaMatch = str.match(/(AIzaSy[A-Za-z0-9_\-]+)/);
+            if (aizaMatch && aizaMatch[1]) {
+                return aizaMatch[1];
+            }
+            return str.replace(/['"\s]/g, '');
+        }
+
+        function onModelSelectChange() {
+            const select = document.getElementById('geminiModelSelect');
+            if (select) {
+                localStorage.setItem('gemini_selected_model', select.value);
+            }
+        }
+
+        function getEffectiveApiKey() {
+            let key = (typeof GEMINI_API_KEY !== 'undefined' && GEMINI_API_KEY.trim()) || 
+                      localStorage.getItem('gemini_api_key_override') || '';
+            return extractApiKeyFromCurlOrText(key);
+        }
+
+        function checkApiKeyStatus() {
+            const key = getEffectiveApiKey();
+            const statusText = document.getElementById('apiKeyStatusText');
+            const tempInput = document.getElementById('tempApiKeyInput');
+            const modelSelect = document.getElementById('geminiModelSelect');
+
+            if (modelSelect) {
+                const savedModel = localStorage.getItem('gemini_selected_model') || GEMINI_MODEL;
+                modelSelect.value = savedModel;
+            }
+            
+            if (key) {
+                const isOverridden = !!localStorage.getItem('gemini_api_key_override');
+                const keySource = isOverridden ? "브라우저 저장" : "코드 설정";
+                statusText.innerText = `설정됨 [${keySource}: ${key.substring(0, 6)}...]`;
+                statusText.className = "text-emerald-400 font-semibold";
+                if (isOverridden && tempInput) {
+                    tempInput.value = localStorage.getItem('gemini_api_key_override');
+                }
+            } else {
+                statusText.innerText = "비어있음 (새 API 키 필요)";
+                statusText.className = "text-red-400 font-semibold";
+                if (tempInput) tempInput.value = "";
+            }
+        }
+
+        function saveTempApiKey() {
+            const rawVal = document.getElementById('tempApiKeyInput').value;
+            const extractedKey = extractApiKeyFromCurlOrText(rawVal);
+
+            if (extractedKey && extractedKey.length >= 10) {
+                localStorage.setItem('gemini_api_key_override', extractedKey);
+                alert("Gemini API 키가 적용되었습니다! (" + extractedKey.substring(0, 6) + "...)");
+                const tempInput = document.getElementById('tempApiKeyInput');
+                if (tempInput) {
+                    tempInput.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+                }
+            } else {
+                localStorage.removeItem('gemini_api_key_override');
+                alert("입력 형식이 올바르지 않아 저장된 API 키가 삭제/초기화되었습니다.");
+            }
+            checkApiKeyStatus();
+        }
+
+        function clearSavedApiKey() {
+            localStorage.removeItem('gemini_api_key_override');
+            const tempInput = document.getElementById('tempApiKeyInput');
+            if (tempInput) tempInput.value = "";
+            alert("저장된 API 키가 삭제되었습니다.");
+            checkApiKeyStatus();
+        }
+
+        function promptSetApiKey() {
+            const currentKey = getEffectiveApiKey();
+            const input = prompt(
+                "🔑 Gemini API 키 또는 Google AI Studio에서 복사한 cURL 명령어 전체를 입력하세요:\n\n(API 키 무료 발급: https://aistudio.google.com/app/apikey)", 
+                currentKey ? currentKey : ""
+            );
+            if (input !== null) {
+                const key = extractApiKeyFromCurlOrText(input);
+                if (key && key.length >= 10) {
+                    localStorage.setItem('gemini_api_key_override', key);
+                    alert("✅ Gemini API 키가 정상적으로 설정되었습니다! (" + key.substring(0, 6) + "...)");
+                } else {
+                    localStorage.removeItem('gemini_api_key_override');
+                    alert("API 키 설정이 초기화되었습니다.");
+                }
+                checkApiKeyStatus();
+            }
+        }
+
+        // Core Gemini API Call with Auto Fallback Queue + 429 Retry-After 지원 + 로그 수집
+        async function callGeminiApiWithFallback(apiKey, promptText, contextGroup = '') {
+            window.addLog?.('info', 'AI_API', `Gemini API 호출 시작 ${contextGroup ? '[' + contextGroup + ']' : ''}`);
+            let selectedModel = localStorage.getItem('gemini_selected_model') || GEMINI_MODEL;
+            // 선택 모델이 기본이면 fallback 배열, 아니면 선택 모델 → 기본 → fallback 순
+            let modelQueue;
+            if (selectedModel === GEMINI_MODEL) {
+                modelQueue = [GEMINI_MODEL, ...FALLBACK_MODELS];
+            } else {
+                modelQueue = [selectedModel, GEMINI_MODEL, ...FALLBACK_MODELS.filter(m => m !== selectedModel)];
+            }
+            let lastError = null;
+
+            for (let mi = 0; mi < modelQueue.length; mi++) {
+                const modelName = modelQueue[mi];
+                try {
+                    const statusMsg = document.getElementById('generatingStatusMsg');
+                    if (statusMsg) {
+                        statusMsg.innerText = `Gemini AI (${modelName}) 피드백을 생성하고 있습니다...`;
+                    }
+
+                    const response = await fetch(
+                        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+                        {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+                        }
+                    );
+
+                    // response body는 한 번만 읽을 수 있으므로 text로 먼저 읽음
+                    const rawText = await response.text();
+                    let data = {};
+                    try { data = JSON.parse(rawText); } catch (e) { /* 파싱 실패 시 빈 객체 */ }
+
+                    if (response.ok) {
+                        const candidate = data.candidates?.[0];
+                        const text = candidate?.content?.parts?.[0]?.text;
+
+                        if (text && text.trim()) {
+                            window.addLog?.('success', modelName, `피드백 생성 성공 (${text.length}자) ${contextGroup ? '[' + contextGroup + ']' : ''}`);
+                            return { text: text.trim(), modelUsed: modelName };
+                        }
+
+                        // SAFETY 등 finishReason으로 텍스트가 없는 경우
+                        const finishReason = candidate?.finishReason;
+                        if (finishReason && finishReason !== 'STOP') {
+                            console.warn(`[Gemini] ${modelName} 응답 차단 (${finishReason}). 다음 모델 시도...`);
+                            lastError = new Error(`${modelName} 응답 차단: ${finishReason}`);
+                            continue;
+                        }
+                        lastError = new Error(`${modelName}: 응답 텍스트 비어있음`);
+                        continue;
+                    }
+
+                    // ★ 핵심 수정: 429 Too Many Requests → Retry-After 헤더 읽어 대기 후 같은 모델 재시도
+                    if (response.status === 429) {
+                        const retryAfterSec = parseInt(response.headers.get('Retry-After') || '0', 10);
+                        const waitMs = retryAfterSec > 0 ? retryAfterSec * 1000 : 8000; // 헤더 없으면 8초 대기
+                        console.warn(`[Gemini] ${modelName} 429 Too Many Requests. ${waitMs/1000}초 대기 후 다음 모델 전환...`);
+
+                        const statusMsg = document.getElementById('generatingStatusMsg');
+                        if (statusMsg) {
+                            statusMsg.innerText = `⚠️ ${modelName} 요청 한도 초과. ${waitMs/1000}초 후 대체 모델 전환...`;
+                        }
+
+                        await new Promise(r => setTimeout(r, waitMs));
+                        lastError = new Error(`429: ${modelName} Rate limit exceeded`);
+                        continue; // 다음 모델로 이동
+                    }
+
+                    // 기타 HTTP 오류
+                    const errMsg = data.error?.message || `API 요청 오류 (HTTP ${response.status})`;
+                    if (response.status === 400 || response.status === 403) {
+                        if (errMsg.includes("API key not valid")) throw new Error("INVALID_API_KEY");
+                    }
+                    console.warn(`[Gemini] ${modelName} 실패 (${errMsg}). 다음 모델 전환...`);
+                    lastError = new Error(errMsg);
+
+                } catch (err) {
+                    if (err.message === "INVALID_API_KEY") throw err;
+                    console.warn(`[Gemini] ${modelName} 예외:`, err.message);
+                    lastError = err;
+                }
+
+                // 모델 간 전환 시 짧은 대기 (연속 요청 방지)
+                if (mi < modelQueue.length - 1) {
+                    await new Promise(r => setTimeout(r, 1500));
+                }
+            }
+
+            throw lastError || new Error("모든 Gemini 모델에서 오류가 발생했습니다.");
+        }
+
+        function openAIFeedbackModal(submissionId) {
+            const item = allSubmissionsData.find(s => s.id === submissionId);
+            if (!item) return;
+
+            activeSubmissionId = submissionId;
+
+            document.getElementById('feedbackGroupBadge').innerText = item.groupNumber;
+            document.getElementById('feedbackTopicTitle').innerText = item.topicTitle;
+            document.getElementById('feedbackStudentSummary').innerText = item.chatSummary || "(요약 내용 없음)";
+            
+            const dateStr = item.submittedAt ? item.submittedAt.toLocaleString('ko-KR', {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            }) : '';
+            document.getElementById('feedbackSubmitTime').innerText = `제출: ${dateStr}`;
+
+            document.getElementById('feedbackTextarea').value = item.feedback || '';
+            document.getElementById('feedbackSaveStatus').classList.add('hidden');
+            document.getElementById('aiGeneratingOverlay').classList.add('hidden');
+
+            checkApiKeyStatus();
+
+            document.getElementById('aiFeedbackModal').classList.remove('hidden');
+        }
+
+        function closeAIFeedbackModal() {
+            document.getElementById('aiFeedbackModal').classList.add('hidden');
+            activeSubmissionId = null;
+        }
+
+        async function triggerAIFeedbackGeneration() {
+            const apiKey = getEffectiveApiKey();
+            const tempInput = document.getElementById('tempApiKeyInput');
+
+            if (!apiKey || apiKey.length < 10) {
+                alert("❌ Gemini API 키가 설정되지 않았거나 유효하지 않습니다.\n\n[해결 방법]\n1. https://aistudio.google.com/app/apikey 에 접속하여 무료 API 키를 발급받으세요.\n2. 안내창의 API 키 입력칸에 발급받은 키(AIzaSy...) 또는 cURL 명령어를 붙여넣고 [키/cURL 적용] 버튼을 눌러주세요.");
+                if (tempInput) {
+                    tempInput.classList.add('border-red-500', 'ring-2', 'ring-red-500');
+                    tempInput.focus();
+                }
+                return;
+            }
+
+            const item = allSubmissionsData.find(s => s.id === activeSubmissionId);
+            if (!item) return;
+
+            const overlay = document.getElementById('aiGeneratingOverlay');
+            const generateBtn = document.getElementById('generateBtn');
+            const textarea = document.getElementById('feedbackTextarea');
+
+            overlay.classList.remove('hidden');
+            generateBtn.disabled = true;
+
+            const promptText = `당신은 중학교 과학 교사입니다. 학생들이 작성한 21세기 우주 탐사 프로젝트 제출 결과를 바탕으로 개별적이고 구체적이며 격려가 담긴 평가 피드백을 작성해주세요.
+
+[학생 제출 데이터]
+- 모둠: ${item.groupNumber}
+- 탐사 주제: ${item.topicTitle}
+- AI 대화 요약 내용: ${item.chatSummary}
+
+[평가 및 피드백 작성 가이드라인]
+1. 🌟 탐구 주제 및 내용 칭찬 (강점)
+2. 🔍 AI 자료 활용 및 비판적 검증 평가 (Fact Check 수행 여부 등)
+3. 💡 발표 및 추가 학습을 위한 보완점 및 발전 방향
+4. 📝 종합 한 줄 평 및 따뜻한 격려
+
+친절하고 격려하는 어조(~해요, ~했습니다)로 작성해 주세요. 전문적이면서 학생 눈높이에 맞게 300~500자 내외로 작성해 주세요.`;
+
+            try {
+                const result = await callGeminiApiWithFallback(apiKey, promptText);
+                textarea.value = result.text;
+                await saveCurrentFeedback(true);
+
+            } catch (err) {
+                console.error("AI Feedback Generation Error:", err);
+                if (err.message === "INVALID_API_KEY" || err.message.includes("API key not valid")) {
+                    alert("❌ [API key not valid] Gemini API 키가 유효하지 않습니다.\n\n[해결 방법]\n1. https://aistudio.google.com/app/apikey 에 접속하여 새 무료 API 키를 발급받으세요.\n2. 발급받은 키(AIzaSy...) 또는 cURL 명령어 전체를 아래 입력창에 붙여넣고 [키/cURL 적용]을 누르면 해결됩니다.");
+                    if (tempInput) {
+                        tempInput.classList.add('border-red-500', 'ring-2', 'ring-red-500');
+                        tempInput.focus();
+                    }
+                } else if (err.message.includes("Quota exceeded")) {
+                    alert("❌ [사용량 초과 / Quota Exceeded]\n\n선택한 Gemini 모델의 무료 사용량 제한이 발생하여 대치 모델 전환을 시도하였으나 실패했습니다.\n\n[해결 방법]\n1. Google AI Studio에서 새 API 키를 발급받으세요.\n2. 수 분 뒤 다시 시도해 주세요.");
+                } else {
+                    alert("AI 피드백 생성 실패: " + err.message);
+                }
+            } finally {
+                overlay.classList.add('hidden');
+                generateBtn.disabled = false;
+            }
+        }
+
+        async function saveCurrentFeedback(silent = false) {
+            if (!activeSubmissionId) return;
+
+            const feedbackText = document.getElementById('feedbackTextarea').value;
+            const saveStatus = document.getElementById('feedbackSaveStatus');
+
+            const item = allSubmissionsData.find(s => s.id === activeSubmissionId);
+            const groupNum = item ? item.groupNumber : null;
+
+            if (item) {
+                item.feedback = feedbackText;
+            }
+
+            if (window.saveFeedbackToRealtimeDB) {
+                await window.saveFeedbackToRealtimeDB(activeSubmissionId, feedbackText, groupNum);
+            }
+
+            renderSubmissionsTable();
+
+            if (!silent) {
+                saveStatus.classList.remove('hidden');
+                setTimeout(() => {
+                    saveStatus.classList.add('hidden');
+                }, 2000);
+            }
+        }
+
+        function copyFeedbackToClipboard() {
+            const textarea = document.getElementById('feedbackTextarea');
+            if (!textarea.value.trim()) {
+                alert("복사할 피드백 내용이 없습니다.");
+                return;
+            }
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                alert("피드백이 클립보드에 복사되었습니다!");
+            }).catch(err => {
+                textarea.select();
+                document.execCommand('copy');
+                alert("피드백이 복사되었습니다.");
+            });
+        }
+
+        async function batchGenerateAIFeedback() {
+            const apiKey = getEffectiveApiKey();
+            if (!apiKey || apiKey.length < 10) {
+                alert("Gemini API 키가 설정되지 않았습니다.\n\n상단 [API 키 설정] 버튼에서 입력해 주세요.");
+                promptSetApiKey();
+                return;
+            }
+
+            if (allSubmissionsData.length === 0) {
+                alert("피드백을 생성할 제출 내역이 없습니다.");
+                return;
+            }
+
+            const pendingItems = allSubmissionsData.filter(item => !item.feedback || item.feedback.trim().length === 0);
+
+            if (pendingItems.length === 0) {
+                alert("모든 제출건에 이미 AI 피드백이 작성되어 있습니다!");
+                return;
+            }
+
+            const rpmLimit = 15; // gemini-1.5-flash 무료 티어 기준
+            const delayMs = BATCH_DELAY_MS; // 5000ms = 5초 (15RPM 기준 안전 간격)
+            const totalSec = Math.ceil((pendingItems.length * delayMs) / 1000);
+            const totalMin = Math.floor(totalSec / 60);
+            const remSec = totalSec % 60;
+            const timeStr = totalMin > 0 ? `약 ${totalMin}분 ${remSec}초` : `약 ${remSec}초`;
+
+            if (!confirm(`피드백 미완성 ${pendingItems.length}개 모둠에 AI 피드백을 자동 생성합니다.\n\n⏱ 예상 소요 시간: ${timeStr}\n(무료 API 한도 초과 방지를 위해 모둠당 ${delayMs/1000}초 간격으로 전송)\n\n계속 진행하시겠습니까?`)) {
+                return;
+            }
+
+            let savedCount = 0;
+            let failCount = 0;
+
+            for (let i = 0; i < pendingItems.length; i++) {
+                const item = pendingItems[i];
+                const progressStr = `[${i + 1}/${pendingItems.length}] ${item.groupNumber}`;
+
+                // 진행 현황을 generatingStatusMsg에 표시
+                const statusMsg = document.getElementById('generatingStatusMsg');
+
+                const promptText = `당신은 중학교 과학 교사입니다. 학생 모둠의 21세기 우주 탐사 프로젝트 제출 결과를 평가하고 따뜻한 피드백을 작성하세요.
+
+[학생 제출 데이터]
+- 모둠: ${item.groupNumber}
+- 탐사 주제: ${item.topicTitle}
+- AI 대화 요약 내용: ${item.chatSummary}
+
+강점, 비판적 사고 검증, 보완점, 따뜻한 격려를 담아 친절한 어조(~해요, ~했어요)로 300자 내외로 작성해주세요.`;
+
+                try {
+                    const result = await callGeminiApiWithFallback(apiKey, promptText);
+                    if (result && result.text) {
+                        item.feedback = result.text;
+
+                        if (window.saveFeedbackToRealtimeDB) {
+                            await window.saveFeedbackToRealtimeDB(item.id, result.text, item.groupNumber);
+                        }
+
+                        savedCount++;
+                        renderSubmissionsTable();
+                        console.log(`[일괄 피드백] ${progressStr} 완료 (모델: ${result.modelUsed})`);
+                    }
+                } catch (e) {
+                    failCount++;
+                    console.error(`[일괄 피드백] ${progressStr} 실패:`, e.message);
+
+                    if (e.message === "INVALID_API_KEY") {
+                        alert("❌ API 키가 유효하지 않아 일괄 생성이 중단되었습니다.");
+                        promptSetApiKey();
+                        return;
+                    }
+                    // 429 또는 기타 오류 시 다음 항목으로 계속 (중단하지 않음)
+                }
+
+                // 다음 항목 전 대기 (마지막 항목 제외) + 카운트다운 표시
+                if (i < pendingItems.length - 1) {
+                    let remaining = Math.ceil(delayMs / 1000);
+                    const countdown = setInterval(() => {
+                        if (statusMsg) {
+                            statusMsg.innerText = `⏳ 다음 모둠 피드백 대기 중... (${remaining}초) [${i + 2}/${pendingItems.length}]`;
+                        }
+                        remaining--;
+                    }, 1000);
+                    await new Promise(r => setTimeout(r, delayMs));
+                    clearInterval(countdown);
+                }
+            }
+
+            renderSubmissionsTable();
+
+            if (failCount === 0) {
+                alert(`완료! 총 ${savedCount}개 모둠의 AI 피드백이 생성되어 DB에 저장되었습니다.`);
+            } else {
+                alert(`완료! 성공: ${savedCount}개 / 실패: ${failCount}개\n\n실패한 모둠은 개별 [AI 피드백] 버튼으로 재시도해 주세요.`);
+            }
+        }
+    </script>
+</body>
+</html>
