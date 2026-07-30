@@ -583,11 +583,12 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getDatabase, ref, push, get, child, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAAryukXVBSeU4Gu7qz0e4AlBJTksJlIRE",
             authDomain: "ms3-21th-century-space.firebaseapp.com",
+            databaseURL: "https://ms3-21th-century-space-default-rtdb.firebaseio.com",
             projectId: "ms3-21th-century-space",
             storageBucket: "ms3-21th-century-space.firebasestorage.app",
             messagingSenderId: "278442658555",
@@ -595,16 +596,17 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = getDatabase(app);
 
-        // Expose functions globally for UI actions
-        window.saveToFirestore = async function(data) {
+        // Expose Realtime Database functions globally for UI actions
+        window.saveToRealtimeDB = async function(data) {
             try {
-                const docRef = await addDoc(collection(db, "submissions"), {
+                const submissionsRef = ref(db, "submissions");
+                await push(submissionsRef, {
                     groupNumber: data.group,
                     topicTitle: data.topic,
                     chatSummary: data.summary,
-                    submittedAt: serverTimestamp()
+                    submittedAt: new Date().toISOString()
                 });
                 return true;
             } catch (error) {
@@ -613,21 +615,26 @@
             }
         };
 
-        window.fetchFirestoreSubmissions = async function() {
+        window.fetchRealtimeSubmissions = async function() {
             try {
-                const q = query(collection(db, "submissions"), orderBy("submittedAt", "desc"));
-                const querySnapshot = await getDocs(q);
+                const dbRef = ref(db);
+                const snapshot = await get(child(dbRef, "submissions"));
                 const results = [];
-                querySnapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    results.push({
-                        id: docSnap.id,
-                        groupNumber: data.groupNumber || "모둠 미지정",
-                        topicTitle: data.topicTitle || "주제 없음",
-                        chatSummary: data.chatSummary || "요약 없음",
-                        submittedAt: data.submittedAt ? data.submittedAt.toDate() : new Date()
+                if (snapshot.exists()) {
+                    const dataObj = snapshot.val();
+                    Object.keys(dataObj).forEach((key) => {
+                        const data = dataObj[key];
+                        results.push({
+                            id: key,
+                            groupNumber: data.groupNumber || "모둠 미지정",
+                            topicTitle: data.topicTitle || "주제 없음",
+                            chatSummary: data.chatSummary || "요약 없음",
+                            submittedAt: data.submittedAt ? new Date(data.submittedAt) : new Date()
+                        });
                     });
-                });
+                    // 제출 시간 기준 내림차순 정렬
+                    results.sort((a, b) => b.submittedAt - a.submittedAt);
+                }
                 return results;
             } catch (error) {
                 console.error("Error fetching submissions:", error);
@@ -635,9 +642,10 @@
             }
         };
 
-        window.deleteFirestoreSubmission = async function(docId) {
+        window.deleteRealtimeSubmission = async function(docId) {
             try {
-                await deleteDoc(doc(db, "submissions", docId));
+                const itemRef = ref(db, "submissions/" + docId);
+                await remove(itemRef);
                 return true;
             } catch (error) {
                 console.error("Error deleting document:", error);
@@ -747,8 +755,8 @@
                 </tr>
             `;
 
-            if (window.fetchFirestoreSubmissions) {
-                allSubmissionsData = await window.fetchFirestoreSubmissions();
+            if (window.fetchRealtimeSubmissions) {
+                allSubmissionsData = await window.fetchRealtimeSubmissions();
                 renderSubmissionsTable();
             } else {
                 tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-400">데이터베이스 연결 오류</td></tr>`;
@@ -817,8 +825,8 @@
             document.getElementById('deleteModalTargetName').innerText = `[${groupNum}]의 제출 기록을 정말 삭제하시겠습니까?`;
             document.getElementById('deleteConfirmModal').classList.remove('hidden');
             document.getElementById('confirmDeleteBtn').onclick = async function() {
-                if (pendingDeleteDocId && window.deleteFirestoreSubmission) {
-                    await window.deleteFirestoreSubmission(pendingDeleteDocId);
+                if (pendingDeleteDocId && window.deleteRealtimeSubmission) {
+                    await window.deleteRealtimeSubmission(pendingDeleteDocId);
                     closeDeleteModal();
                     fetchTeacherSubmissions();
                 }
@@ -1084,12 +1092,12 @@ ${rawChatTextForSummary}`;
             };
 
             try {
-                if (window.saveToFirestore) {
-                    await window.saveToFirestore(formData);
+                if (window.saveToRealtimeDB) {
+                    await window.saveToRealtimeDB(formData);
                     submitBtn.classList.add('hidden');
                     successMessage.classList.remove('hidden');
                 } else {
-                    throw new Error("Firebase is not initialized correctly.");
+                    throw new Error("Firebase Realtime Database가 정상적으로 초기화되지 않았습니다.");
                 }
             } catch (error) {
                 console.error("Submission failed:", error);
@@ -1101,3 +1109,11 @@ ${rawChatTextForSummary}`;
     </script>
 </body>
 </html>
+```
+
+### 💡 변경 사항 주요 포인트
+1. **모듈 임포트 변경:** `firebase-firestore` 대신 `firebase-database` 모듈(`ref`, `push`, `get`, `child`, `remove`)을 가져오도록 전환했습니다.
+2. **Realtime DB 전용 함수 등록:** 
+   - `saveToRealtimeDB`: 학생 과제 제출 시 Realtime Database의 `submissions` 노드에 데이터를 누적 저장합니다.
+   - `fetchRealtimeSubmissions`: 교사 대시보드 조회 시 `submissions` 경로의 전체 데이터를 받아옵니다.
+   - `deleteRealtimeSubmission`: 지정한 모둠의 데이터를 삭제합니다.
