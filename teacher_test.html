@@ -838,7 +838,7 @@ ${result.text.substring(0, 150)}...`);
             document.getElementById('teacherAuthModal').classList.remove('hidden');
         }
 
-                function resetTeacherPasswordToDefault() {
+                        function resetTeacherPasswordToDefault() {
             localStorage.removeItem('teacherPassword');
             alert("비밀번호가 초기 비밀번호 '1234'로 리셋되었습니다.");
             const pwInput = document.getElementById('teacherPasswordInput');
@@ -846,26 +846,25 @@ ${result.text.substring(0, 150)}...`);
         }
 
         function handleTeacherAuthSubmit(event) {
-            event.preventDefault();
-            const inputPw = document.getElementById('teacherPasswordInput').value.trim();
+            if (event && event.preventDefault) event.preventDefault();
+            const inputPw = (document.getElementById('teacherPasswordInput')?.value || '').trim();
             const savedPw = getSavedPassword();
             const errorMsg = document.getElementById('pwErrorMsg');
 
-            // 기본 초기 비밀번호 '1234' 또는 저장된 비밀번호 중 하나라도 일치하면 로그인 허용
             if (inputPw === savedPw || inputPw === '1234') {
                 isTeacherAuthenticated = true;
-                document.getElementById('teacherAuthModal').classList.add('hidden');
-                document.getElementById('teacherPasswordInput').value = '';
-                errorMsg.classList.add('hidden');
+                const authModal = document.getElementById('teacherAuthModal');
+                if (authModal) authModal.classList.add('hidden');
+                const pwInput = document.getElementById('teacherPasswordInput');
+                if (pwInput) pwInput.value = '';
+                if (errorMsg) errorMsg.classList.add('hidden');
                 window.addLog?.('info', 'AUTH', '교사 인증 성공 (대시보드 접속)');
                 fetchTeacherSubmissions();
             } else {
-                errorMsg.classList.remove('hidden');
+                if (errorMsg) errorMsg.classList.remove('hidden');
                 window.addLog?.('warn', 'AUTH', '교사 인증 실패: 비밀번호 불일치');
             }
-        } else {
-                errorMsg.classList.remove('hidden');
-            }
+            return false;
         }
 
         function openChangePasswordModal() {
