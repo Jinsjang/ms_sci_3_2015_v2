@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>21세기 우주 탐사 프로젝트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Pretendard', 'sans-serif'],
+                    },
+                    colors: {
+                        space: {
+                            900: '#0B0F19',
+                            800: '#151C2C',
+                            700: '#1E293B',
+                            accent: '#3B82F6',
+                            highlight: '#8B5CF6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0B0F19;
+            color: #F8FAFC;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
+            background-attachment: fixed;
+        }
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #151C2C; }
+        ::-webkit-scrollbar-thumb { background: #3B82F6; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2563EB; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans">
+
+    <header class="bg-space-800 border-b border-gray-800 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                    <i class="fa-solid fa-rocket mr-2 text-blue-400"></i>21세기 우주 탐사
+                </h1>
+                <p class="text-sm text-gray-400 mt-1">중등과학 3학년 | 지도교사: 장진섭</p>
+            </div>
+            <div class="hidden md:flex space-x-2">
+                <span class="px-3 py-1 bg-gray-800 rounded-full text-xs text-gray-300 border border-gray-700">#AI활용</span>
+                <span class="px-3 py-1 bg-gray-800 rounded-full text-xs text-gray-300 border border-gray-700">#프로젝트학습</span>
+            </div>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <div class="max-w-6xl mx-auto px-4 mt-2">
+            <nav class="flex overflow-x-auto space-x-1 border-b border-gray-800 pb-px" id="tabs">
+                <button onclick="switchTab('step1')" class="tab-btn active px-4 py-3 text-sm font-medium text-blue-400 border-b-2 border-blue-400 whitespace-nowrap transition-colors duration-200">
+                    1. 도입 <span class="text-xs text-gray-500 ml-1">(10분)</span>
+                </button>
+                <button onclick="switchTab('step2')" class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 border-b-2 border-transparent hover:text-gray-200 whitespace-nowrap transition-colors duration-200">
+                    2. 탐색 <span class="text-xs text-gray-500 ml-1">(10분)</span>
+                </button>
+                <button onclick="switchTab('step3')" class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 border-b-2 border-transparent hover:text-gray-200 whitespace-nowrap transition-colors duration-200">
+                    3. 적용 <span class="text-xs text-gray-500 ml-1">(30분)</span>
+                </button>
+                <button onclick="switchTab('step4')" class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 border-b-2 border-transparent hover:text-gray-200 whitespace-nowrap transition-colors duration-200">
+                    4. 발표 및 제출 <span class="text-xs text-gray-500 ml-1">(2차시)</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 py-8">
+        
+        <section id="step1" class="tab-content active">
+            <div class="bg-space-800 rounded-2xl p-6 md:p-8 border border-gray-800 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-10">
+                    <i class="fa-solid fa-users text-9xl text-blue-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-6 flex items-center text-blue-300">
+                    <span class="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg mr-3 text-sm">Step 1</span>과제 제시 및 모둠 구성
+                </h2>
+                
+                <div class="space-y-6 relative z-10">
+                    <div class="bg-space-700/50 p-5 rounded-xl border border-gray-700">
+                        <h3 class="text-lg font-semibold mb-2 text-white"><i class="fa-solid fa-bullseye text-red-400 mr-2"></i>학습 목표 (성취기준)</h3>
+                        <p class="text-gray-300 text-lg leading-relaxed">
+                            우주 탐사의 의의와 인류에게 미치는 영향을 조사하여 발표할 수 있다.
+                        </p>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-space-700/50 p-5 rounded-xl border border-gray-700">
+                            <h3 class="text-lg font-semibold mb-4 text-white"><i class="fa-solid fa-list-check text-green-400 mr-2"></i>활동 안내</h3>
+                            <ul class="space-y-3 text-gray-300">
+                                <li class="flex items-start"><i class="fa-solid fa-check mt-1 mr-2 text-green-500 text-sm"></i> 선생님의 설명을 경청합니다.</li>
+                                <li class="flex items-start"><i class="fa-solid fa-check mt-1 mr-2 text-green-500 text-sm"></i> 사용할 도구(패들렛, 제미나이, 제미나이 노트북)의 사용법을 확인합니다.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-space-700/50 p-5 rounded-xl border border-gray-700 border-l-4 border-l-purple-500">
+                            <h3 class="text-lg font-semibold mb-4 text-white"><i class="fa-solid fa-people-group text-purple-400 mr-2"></i>모둠 구성 (전체)</h3>
+                            <div class="flex items-center justify-between bg-space-900 p-4 rounded-lg">
+                                <div class="text-center w-full">
+                                    <span class="block text-3xl font-bold text-purple-400">3명</span>
+                                    <span class="text-sm text-gray-400">1조당 인원</span>
+                                </div>
+                                <div class="text-gray-600 text-2xl mx-2">×</div>
+                                <div class="text-center w-full">
+                                    <span class="block text-3xl font-bold text-purple-400">11모둠</span>
+                                    <span class="text-sm text-gray-400">총 모둠 수</span>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-400 mt-3 text-center">도구: <strong>패들렛</strong> (역할: 과제안내, 모둠구성)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 flex justify-end">
+                    <button onclick="switchTab('step2')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-blue-500/30">
+                        다음 단계로 이동 <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="step2" class="tab-content">
+            <div class="bg-space-800 rounded-2xl p-6 md:p-8 border border-gray-800 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-10">
+                    <i class="fa-solid fa-magnifying-glass text-9xl text-purple-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-6 flex items-center text-purple-400">
+                    <span class="bg-purple-500/20 text-purple-400 px-3 py-1 rounded-lg mr-3 text-sm">Step 2</span>자료 수집 및 선정
+                </h2>
+
+                <div class="space-y-6 relative z-10">
+                    <p class="text-gray-300 text-lg">모둠별로 역할을 배분하고 21세기 우주 탐사 주제를 선정하여 인공지능을 통해 자료를 탐색합니다.</p>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-space-700/50 p-5 rounded-xl border border-gray-700">
+                            <h3 class="text-lg font-semibold mb-4 text-white"><i class="fa-solid fa-list-ol text-blue-400 mr-2"></i>탐색 순서</h3>
+                            <ol class="space-y-4 text-gray-300 list-decimal list-inside">
+                                <li class="pb-2 border-b border-gray-700">우주 탐사 주제 선정</li>
+                                <li class="pb-2 border-b border-gray-700"><strong>인공지능 검색 (제미나이 활용)</strong></li>
+                                <li class="pb-2 border-b border-gray-700 font-semibold text-red-300">웹 검색으로 진위 여부 확인 및 검증 필수!</li>
+                                <li class="pb-2 border-b border-gray-700">신뢰할 수 있는 원본 소스 선정</li>
+                                <li>모둠원 역할 배분</li>
+                            </ol>
+                        </div>
+
+                        <!-- Crucial Warning Section from Lesson Plan -->
+                        <div class="bg-red-900/20 p-5 rounded-xl border border-red-900/50">
+                            <h3 class="text-lg font-semibold mb-4 text-red-400"><i class="fa-solid fa-triangle-exclamation mr-2"></i>AI·디지털 활용 유의사항</h3>
+                            <div class="bg-space-900/80 p-4 rounded-lg text-gray-300 text-sm space-y-3">
+                                <p><i class="fa-solid fa-circle-info text-red-500 mr-2 text-xs"></i>제미나이를 통해 자료를 수집할 때 <strong>반드시 출처 링크를 포함</strong>하여 수집하세요.</p>
+                                <p><i class="fa-solid fa-circle-info text-red-500 mr-2 text-xs"></i>수집한 링크에 직접 접속하여 <strong>내용의 진위여부(Fact Check)를 반드시 확인</strong>해야 합니다.</p>
+                                <p class="mt-4 p-2 bg-red-950/50 rounded border border-red-900 text-center text-red-300 font-medium">
+                                    무비판적인 수용은 감점 요소입니다!
+                                </p>
+                            </div>
+                            <div class="mt-4 text-right">
+                                <a href="https://gemini.google.com" target="_blank" class="inline-block bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                    제미나이(Gemini) 열기 <i class="fa-solid fa-external-link-alt ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-between">
+                    <button onclick="switchTab('step1')" class="text-gray-400 hover:text-white px-4 py-2 transition-colors">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> 이전
+                    </button>
+                    <button onclick="switchTab('step3')" class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-purple-500/30">
+                        다음 단계로 이동 <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="step3" class="tab-content">
+            <div class="bg-space-800 rounded-2xl p-6 md:p-8 border border-gray-800 shadow-xl relative overflow-hidden">
+                 <div class="absolute top-0 right-0 p-8 opacity-10">
+                    <i class="fa-solid fa-laptop-code text-9xl text-green-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-6 flex items-center text-green-400">
+                    <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-lg mr-3 text-sm">Step 3</span>자료 생성 및 정리 (제미나이 챗봇)
+                </h2>
+
+                <div class="space-y-6 relative z-10">
+                    <p class="text-gray-300 text-lg">수집하고 검증한 원본 소스를 바탕으로 발표 자료(PT)와 대본을 작성합니다. 아래 챗봇과 대화하며 자료를 정리해보세요.</p>
+                    
+                    <!-- AI Chatbot Interface -->
+                    <div class="bg-space-900 rounded-xl border border-gray-700 shadow-inner overflow-hidden flex flex-col h-[500px]">
+                        <div class="bg-space-700 p-4 border-b border-gray-600 flex justify-between items-center">
+                            <h3 class="text-white font-semibold flex items-center">
+                                <i class="fa-solid fa-robot text-blue-400 mr-2"></i> 우주 탐사 도우미 AI
+                            </h3>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="startNewChat()" class="text-xs text-gray-300 hover:text-white bg-space-800 hover:bg-space-600 px-3 py-1.5 rounded transition-colors flex items-center border border-gray-600" title="새로운 대화 시작하기">
+                                    <i class="fa-solid fa-rotate-right mr-1.5"></i> 새 채팅
+                                </button>
+                                <span class="text-xs text-gray-400 bg-space-800 px-2 py-1 rounded hidden sm:inline-block border border-gray-600">Gemini Flash</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Chat History Container -->
+                        <div id="chatHistory" class="flex-grow p-4 overflow-y-auto space-y-4 bg-space-800/50">
+                            <!-- Welcome Message -->
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-3 flex-shrink-0">
+                                    <i class="fa-solid fa-robot text-white text-sm"></i>
+                                </div>
+                                <div class="bg-space-700 rounded-2xl rounded-tl-none p-3 max-w-[80%] text-sm text-gray-200 shadow-md">
+                                    안녕하세요! 21세기 우주 탐사 프로젝트를 도와줄 AI 도우미입니다.<br>
+                                    어떤 주제에 대해 조사하셨나요? 발표 대본이나 PT 목차 작성을 도와드릴까요?
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Typing Indicator (Hidden by default) -->
+                        <div id="typingIndicator" class="hidden p-4 bg-space-800/50">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-3 flex-shrink-0">
+                                    <i class="fa-solid fa-robot text-white text-sm"></i>
+                                </div>
+                                <div class="bg-space-700 rounded-2xl rounded-tl-none p-3 shadow-md flex space-x-2 items-center">
+                                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Input Area -->
+                        <div class="p-3 bg-space-800 border-t border-gray-700">
+                            <form id="chatForm" onsubmit="handleChatSubmit(event)" class="flex gap-2">
+                                <input type="text" id="chatInput" placeholder="질문을 입력하세요..." required
+                                    class="flex-grow bg-space-900 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center min-w-[80px]">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Evaluation Rubric from PDF -->
+                    <div class="mt-6">
+                        <h3 class="text-lg font-semibold mb-3 text-white"><i class="fa-solid fa-ranking-star text-yellow-400 mr-2"></i>발표 자료 평가 기준</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-gray-300">
+                                <thead class="text-xs uppercase bg-space-700 text-gray-400">
+                                    <tr>
+                                        <th class="px-4 py-3 rounded-tl-lg">평가 요소</th>
+                                        <th class="px-4 py-3 text-red-400">심화 (우수)</th>
+                                        <th class="px-4 py-3 text-blue-400">기본 (보통)</th>
+                                        <th class="px-4 py-3 text-gray-500 rounded-tr-lg">기초 (노력요함)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-700 bg-space-900/50">
+                                    <tr>
+                                        <td class="px-4 py-4 font-medium text-white bg-space-800">과학적 발표</td>
+                                        <td class="px-4 py-4 border-l border-gray-700">정량적 자료와 <b>시각 자료</b>를 활용하여 청자가 이해하기 쉽고 본질이 잘 전달되도록 발표</td>
+                                        <td class="px-4 py-4 border-l border-gray-700">시각 자료를 활용하여 내용을 효과적으로 발표</td>
+                                        <td class="px-4 py-4 border-l border-gray-700">글(텍스트)만 활용하여 내용을 발표</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-4 font-medium text-white bg-space-800">AI 자료 비판적 수용</td>
+                                        <td class="px-4 py-4 border-l border-gray-700">얻은 자료의 <b>진위 여부</b>와 이해를 바탕으로 <b>비판적으로 수용</b>함</td>
+                                        <td class="px-4 py-4 border-l border-gray-700">자료를 바탕으로 진위 여부만 검토하고 수용함</td>
+                                        <td class="px-4 py-4 border-l border-gray-700">인공지능 자료를 비판/검증 없이 수용함</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-between">
+                    <button onclick="switchTab('step2')" class="text-gray-400 hover:text-white px-4 py-2 transition-colors">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> 이전
+                    </button>
+                    <button onclick="prepareSubmission()" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-green-500/30">
+                        대화 요약 및 제출 단계로 <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="step4" class="tab-content">
+            <div class="bg-space-800 rounded-2xl p-6 md:p-8 border border-gray-800 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-10">
+                    <i class="fa-solid fa-chalkboard-user text-9xl text-yellow-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-6 flex items-center text-yellow-400">
+                    <span class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-lg mr-3 text-sm">Step 4</span>발표 및 대화 기록 제출
+                </h2>
+
+                <div class="grid md:grid-cols-2 gap-8 relative z-10">
+                    <!-- Left Column: Instructions -->
+                    <div class="space-y-6">
+                        <div class="bg-space-700/50 p-5 rounded-xl border border-gray-700">
+                            <h3 class="text-lg font-semibold mb-3 text-white">2차시 발표 안내</h3>
+                            <ul class="space-y-3 text-gray-300 text-sm">
+                                <li><i class="fa-regular fa-hand-point-right text-yellow-500 mr-2"></i>만들어진 PT와 대본을 활용하여 모둠별로 발표합니다.</li>
+                                <li><i class="fa-regular fa-hand-point-right text-yellow-500 mr-2"></i>청중(다른 모둠)은 발표 내용 중 어려운 부분을 질문합니다.</li>
+                                <li><i class="fa-regular fa-hand-point-right text-yellow-500 mr-2"></i>발표 자료는 선생님이 안내한 <b>패들렛(Padlet)</b>에 업로드합니다.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-blue-900/20 p-5 rounded-xl border border-blue-900/50">
+                            <h3 class="text-lg font-semibold mb-2 text-blue-300"><i class="fa-solid fa-file-lines mr-2"></i>AI 대화 자동 요약</h3>
+                            <p class="text-sm text-gray-400 mb-3">Step 3에서 AI와 나눈 대화가 자동으로 요약되어 선생님께 제출됩니다.</p>
+                            <div class="bg-space-900/80 p-3 rounded text-sm text-gray-300 max-h-[150px] overflow-y-auto border border-gray-700">
+                                <strong class="text-gray-400 block mb-1">현재 대화 요약 미리보기:</strong>
+                                <p id="summaryPreview" class="italic text-gray-500">아직 대화가 충분하지 않거나 요약 중입니다...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Submission Form -->
+                    <div class="bg-space-900 p-6 rounded-xl border border-gray-700 shadow-inner">
+                        <h3 class="text-xl font-bold mb-4 text-white">최종 제출</h3>
+                        <form id="submitForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                            
+                            <div>
+                                <label for="groupNumber" class="block text-sm font-medium text-gray-300 mb-1">모둠 번호</label>
+                                <select id="groupNumber" required class="w-full bg-space-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                                    <option value="" disabled selected>모둠을 선택하세요</option>
+                                    <!-- Generates options 1 to 11 -->
+                                    <script>
+                                        for(let i=1; i<=11; i++){
+                                            document.write(`<option value="${i}모둠">${i}모둠</option>`);
+                                        }
+                                    </script>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="topicTitle" class="block text-sm font-medium text-gray-300 mb-1">우주 탐사 주제</label>
+                                <input type="text" id="topicTitle" required placeholder="예: 제임스 웹 우주 망원경의 성과" 
+                                    class="w-full bg-space-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 placeholder-gray-500">
+                            </div>
+
+                            <!-- Hidden input for chat summary -->
+                            <input type="hidden" id="chatSummaryData" name="chatSummaryData" value="">
+
+                            <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] shadow-lg flex justify-center items-center">
+                                <span id="btnText">대화 요약 포함하여 제출하기</span>
+                                <i id="btnSpinner" class="fa-solid fa-circle-notch fa-spin hidden ml-2"></i>
+                            </button>
+                        </form>
+                        
+                        <!-- Success Message -->
+                        <div id="successMessage" class="hidden mt-4 p-4 mb-4 text-sm text-green-400 rounded-lg bg-green-900/20 border border-green-800 text-center">
+                            <i class="fa-solid fa-circle-check text-2xl mb-2 block"></i>
+                            성공적으로 제출되었습니다!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-start">
+                    <button onclick="switchTab('step3')" class="text-gray-400 hover:text-white px-4 py-2 transition-colors">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> 이전
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 mt-auto py-6 text-center text-gray-500 text-sm">
+        <p>21세기 우주 탐사 프로젝트 - 중등과학 3학년 과정 중심 평가용 웹앱</p>
+    </footer>
+
+    <script>
+        // --- Gemini Chatbot Logic ---
+        
+        // Chat state
+        let conversationHistory = [];
+        let rawChatTextForSummary = "";
+        
+        // Start new chat
+        function startNewChat() {
+            // Confirm with user if there is an ongoing conversation (using custom modal instead of alert/confirm)
+            if(conversationHistory.length > 0) {
+                // Since alert/confirm are not allowed, we will just reset it directly.
+                // In a real production app, you might want to show a custom modal dialog here.
+                console.log("대화 내역을 초기화합니다.");
+            }
+            
+            // Reset state
+            conversationHistory = [];
+            rawChatTextForSummary = "";
+            
+            // Reset UI
+            const chatHistory = document.getElementById('chatHistory');
+            chatHistory.innerHTML = `
+                <!-- Welcome Message -->
+                <div class="flex items-start">
+                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-3 flex-shrink-0">
+                        <i class="fa-solid fa-robot text-white text-sm"></i>
+                    </div>
+                    <div class="bg-space-700 rounded-2xl rounded-tl-none p-3 max-w-[80%] text-sm text-gray-200 shadow-md">
+                        새로운 대화를 시작합니다! 21세기 우주 탐사 프로젝트에 대해 무엇이든 물어보세요.<br>
+                        어떤 주제에 대해 조사하셨나요?
+                    </div>
+                </div>
+            `;
+            
+            // Reset input and summary preview
+            document.getElementById('chatInput').value = '';
+            document.getElementById('summaryPreview').innerHTML = "<span class='text-yellow-500'>대화 기록이 없습니다. 먼저 Step 3에서 AI와 대화해주세요.</span>";
+            document.getElementById('chatSummaryData').value = "";
+        }
+
+        // Add message to UI
+        function appendMessage(role, text) {
+            const chatHistory = document.getElementById('chatHistory');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex items-start ${role === 'user' ? 'justify-end' : ''}`;
+            
+            let iconHtml, bubbleClass;
+            
+            if (role === 'user') {
+                iconHtml = `<div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center ml-3 flex-shrink-0 order-2">
+                                <i class="fa-solid fa-user text-white text-sm"></i>
+                            </div>`;
+                bubbleClass = "bg-blue-600 text-white rounded-2xl rounded-tr-none p-3 max-w-[80%] text-sm shadow-md order-1";
+            } else {
+                iconHtml = `<div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-3 flex-shrink-0">
+                                <i class="fa-solid fa-robot text-white text-sm"></i>
+                            </div>`;
+                bubbleClass = "bg-space-700 text-gray-200 rounded-2xl rounded-tl-none p-3 max-w-[80%] text-sm shadow-md";
+            }
+
+            // Convert simple markdown-like bold to HTML for better display
+            const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+
+            messageDiv.innerHTML = `
+                ${role === 'user' ? iconHtml : ''}
+                ${role === 'model' ? iconHtml : ''}
+                <div class="${bubbleClass}">
+                    ${formattedText}
+                </div>
+            `;
+            
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight; // Auto-scroll
+            
+            // Accumulate text for summary
+            rawChatTextForSummary += `${role === 'user' ? '학생' : 'AI'}: ${text}\n\n`;
+        }
+
+        // Call Gemini API for Chat
+        async function fetchGeminiResponse(userMessage) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=`; // API Key is injected by the environment
+            
+            // Prepare history for API
+            const apiContents = conversationHistory.map(turn => ({
+                role: turn.role,
+                parts: [{ text: turn.text }]
+            }));
+            
+            // Add current message
+            apiContents.push({
+                role: "user",
+                parts: [{ text: userMessage }]
+            });
+
+            const systemInstruction = {
+                parts: [{ text: "당신은 중학교 3학년 과학 수업 '21세기 우주 탐사' 프로젝트를 돕는 친절하고 똑똑한 AI 교사입니다. 학생이 원본 소스를 바탕으로 프레젠테이션(PT) 대본과 목차를 구성하도록 도와주세요. 어려운 과학 용어는 중학생 수준으로 쉽게 설명해주고, 내용의 진위 여부(Fact Check)를 확인하도록 유도하세요. 답변은 너무 길지 않게 핵심만 명확하게 전달하세요." }]
+            };
+
+            const payload = {
+                contents: apiContents,
+                systemInstruction: systemInstruction,
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content) {
+                    const replyText = result.candidates[0].content.parts[0].text;
+                    
+                    // Update internal history
+                    conversationHistory.push({ role: 'user', text: userMessage });
+                    conversationHistory.push({ role: 'model', text: replyText });
+                    
+                    return replyText;
+                } else {
+                    console.error("Unexpected API response structure", result);
+                    return "죄송합니다. 응답을 생성하는 중에 오류가 발생했습니다. 다시 질문해 주시겠어요?";
+                }
+            } catch (error) {
+                console.error("Error fetching from Gemini API:", error);
+                return "네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            }
+        }
+
+        // Handle Chat Submit
+        async function handleChatSubmit(event) {
+            event.preventDefault();
+            const inputField = document.getElementById('chatInput');
+            const message = inputField.value.trim();
+            if (!message) return;
+
+            // 1. Show user message
+            appendMessage('user', message);
+            inputField.value = '';
+            
+            // 2. Show typing indicator
+            document.getElementById('typingIndicator').classList.remove('hidden');
+            const chatHistory = document.getElementById('chatHistory');
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            
+            // Disable input while generating
+            inputField.disabled = true;
+
+            // 3. Fetch response
+            const responseText = await fetchGeminiResponse(message);
+            
+            // 4. Hide indicator & show response
+            document.getElementById('typingIndicator').classList.add('hidden');
+            appendMessage('model', responseText);
+            
+            // Re-enable input
+            inputField.disabled = false;
+            inputField.focus();
+        }
+
+        // --- Summarization Logic ---
+        async function prepareSubmission() {
+            // First switch tab
+            switchTab('step4');
+            
+            const summaryPreview = document.getElementById('summaryPreview');
+            const chatSummaryData = document.getElementById('chatSummaryData');
+            
+            if (conversationHistory.length === 0) {
+                summaryPreview.innerHTML = "<span class='text-yellow-500'>대화 기록이 없습니다. 먼저 Step 3에서 AI와 대화해주세요.</span>";
+                return;
+            }
+
+            summaryPreview.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i> 대화 내용을 요약하고 있습니다...";
+            
+            // Use Gemini API to summarize the raw text
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=`;
+            
+            const prompt = `다음은 중학교 3학년 학생이 우주 탐사 프로젝트를 위해 AI와 나눈 대화 기록입니다. 
+선생님이 학생의 학습 과정을 파악할 수 있도록 3~4문장으로 핵심만 요약해주세요. 
+주로 어떤 내용을 질문했고, AI가 어떤 도움을 주었는지 명시하세요.
+
+[대화 기록]
+${rawChatTextForSummary}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }]
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                if (result.candidates && result.candidates[0].content) {
+                    const summaryText = result.candidates[0].content.parts[0].text;
+                    summaryPreview.innerHTML = summaryText;
+                    chatSummaryData.value = summaryText; // Set hidden input value for submission
+                } else {
+                    summaryPreview.innerHTML = "요약 생성에 실패했습니다. 하지만 제출은 가능합니다.";
+                    chatSummaryData.value = "[요약 생성 실패] 대화 기록 길이: " + rawChatTextForSummary.length + "자";
+                }
+            } catch (error) {
+                console.error("Summary error:", error);
+                summaryPreview.innerHTML = "네트워크 오류로 요약을 생성하지 못했습니다.";
+                chatSummaryData.value = "[네트워크 오류] 요약 불가";
+            }
+        }
+
+        // --- UI & Submission Logic ---
+        function switchTab(tabId) {
+            // 모든 탭 내용 숨기기
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 모든 탭 버튼 스타일 초기화 (비활성 상태)
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'text-blue-400', 'border-blue-400');
+                btn.classList.add('text-gray-400', 'border-transparent');
+            });
+
+            // 선택된 탭 내용 보이기
+            document.getElementById(tabId).classList.add('active');
+            
+            // 선택된 탭 버튼 하이라이트
+            const activeBtn = document.querySelector(`button[onclick="switchTab('${tabId}')"]`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-gray-400', 'border-transparent');
+                activeBtn.classList.add('active', 'text-blue-400', 'border-blue-400');
+            }
+            
+            // 화면 상단으로 스크롤 이동
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+            const successMessage = document.getElementById('successMessage');
+            
+            const group = document.getElementById('groupNumber').value;
+            const topic = document.getElementById('topicTitle').value;
+            const summary = document.getElementById('chatSummaryData').value;
+            
+            // 버튼 상태를 로딩 중으로 변경
+            submitBtn.disabled = true;
+            btnText.innerText = '제출 중...';
+            btnSpinner.classList.remove('hidden');
+            
+            const formData = {
+                group: group,
+                topic: topic,
+                summary: summary || "요약 데이터가 없습니다."
+            };
+
+            // 구글 앱스 스크립트(GAS) 환경인지 확인
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run
+                    .withSuccessHandler(() => {
+                        submitBtn.classList.add('hidden');
+                        successMessage.classList.remove('hidden');
+                    })
+                    .withFailureHandler((error) => {
+                        alert('제출 중 오류가 발생했습니다: ' + error.message);
+                        submitBtn.disabled = false;
+                        btnText.innerText = '대화 요약 포함하여 제출하기';
+                        btnSpinner.classList.add('hidden');
+                    })
+                    .submitProjectData(formData);
+            } else {
+                // 로컬(일반 브라우저) 테스트용: 1.5초 후 성공 처리
+                console.log('가상 제출 데이터:', formData);
+                setTimeout(() => {
+                    submitBtn.classList.add('hidden');
+                    successMessage.classList.remove('hidden');
+                }, 1500);
+            }
+        }
+    </script>
+</body>
+</html>
