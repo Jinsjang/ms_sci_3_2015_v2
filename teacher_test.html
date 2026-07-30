@@ -401,7 +401,7 @@
                         <select id="geminiModelSelect" onchange="onModelSelectChange()" class="bg-space-900 border border-amber-700/60 text-amber-300 text-xs rounded px-2.5 py-1 focus:ring-amber-500 focus:border-amber-500">
                             <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (무료 티어 쿼터 호환 1위)</option>
                             <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite (경량 무료)</option>
-                            <option value="gemini-1.5-pro">Gemini 1.5 Pro (고성능)</option>
+                            <option value="gemini-1.5-flash-8b">Gemini 1.5 Pro (고성능)</option>
                             <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
                         </select>
                     </div>
@@ -817,7 +817,7 @@ ${result.text.substring(0, 150)}...`);
             "gemini-2.0-flash-lite",   // 가장 빠름, 무료 쿼터 여유
             "gemini-1.5-flash-latest", // flash 최신버전
             "gemini-2.0-flash",        // 더 강력하지만 쿼터 제한 있음
-            "gemini-1.5-pro"           // 마지막 수단
+            "gemini-1.5-flash-8b"           // 마지막 수단
         ];
         // 무료 티어 RPM 한도: gemini-1.5-flash = 15 RPM → 최소 4초 간격
         // 일괄 생성 시 여유 있게 5초 간격 사용
@@ -1221,13 +1221,14 @@ ${result.text.substring(0, 150)}...`);
                         continue; // 다음 모델로 이동
                     }
 
-                    // 기타 HTTP 오류
+                    // 기타 HTTP 오류 (404 Not Found, 400 등)
                     const errMsg = data.error?.message || `API 요청 오류 (HTTP ${response.status})`;
                     if (response.status === 400 || response.status === 403) {
                         if (errMsg.includes("API key not valid")) throw new Error("INVALID_API_KEY");
                     }
+                    window.addLog?.('warn', modelName, `모델 실패 (HTTP ${response.status}): ${errMsg.substring(0, 80)}... 대체 모델 시도중`);
                     console.warn(`[Gemini] ${modelName} 실패 (${errMsg}). 다음 모델 전환...`);
-                    lastError = new Error(errMsg);
+                    lastError = new Error(`${modelName}: ${errMsg}`);
 
                 } catch (err) {
                     if (err.message === "INVALID_API_KEY") throw err;
